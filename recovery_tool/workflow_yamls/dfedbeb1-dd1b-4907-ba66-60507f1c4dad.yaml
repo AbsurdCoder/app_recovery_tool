@@ -1,0 +1,10 @@
+workflow:
+  description: '1234'
+  name: TEST
+  steps:
+  - action_config: wqewqjkeq
+    trigger_type: kafka_to_mq
+  - action_config: eqweqwew
+    trigger_type: kafka_to_mq
+  - action_config: qweqwe
+    trigger_type: mq_to_kafka

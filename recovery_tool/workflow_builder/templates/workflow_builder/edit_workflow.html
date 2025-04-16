@@ -1,0 +1,153 @@
+<!-- recovery_tool/workflow_builder/templates/workflow_builder/edit_workflow.html -->
+{% extends 'workflow_builder/base.html' %}
+
+{% block title %}Edit Workflow{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1>Edit Workflow: {{ workflow.name }}</h1>
+        <p class="text-muted">{{ workflow.description }}</p>
+        
+        <div id="workflow-builder">
+            <div id="steps-container">
+                <!-- Steps will be added here dynamically -->
+                {% for step in steps %}
+                <div class="workflow-step" data-step-id="{{ step.id }}">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label class="form-label">Event Type</label>
+                            <select class="form-select trigger-type">
+                                {% for value, label in trigger_types %}
+                                <option value="{{ value }}" {% if step.trigger_type == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-7">
+                            <label class="form-label">Action Configuration</label>
+                            <textarea class="form-control action-config" rows="4">{{ step.action_config }}</textarea>
+                        </div>
+                        <div class="col-md-1">
+                            <div class="d-flex flex-column h-100 justify-content-center align-items-center">
+                                <button type="button" class="btn btn-danger remove-step mb-2">
+                                    <i class="bi bi-trash"></i> ×
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="mt-3 mb-4">
+                <button id="add-step" class="btn btn-outline-primary">
+                    <i class="bi bi-plus-circle"></i> Add Step
+                </button>
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                <div>
+                    <button id="save-workflow" class="btn btn-primary">Save Workflow</button>
+                    <a href="{% url 'workflow_list' %}" class="btn btn-secondary">Cancel</a>
+                </div>
+                <div>
+                    <a href="{% url 'execute_workflow' workflow.id %}" class="btn btn-success">Execute</a>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <h3>Generated YAML</h3>
+                <pre id="yaml-preview" class="border p-3 bg-light">{{ workflow.yaml_content|default:"Workflow not saved yet." }}</pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Step template (hidden) -->
+<template id="step-template">
+    <div class="workflow-step">
+        <div class="row">
+            <div class="col-md-4">
+                <label class="form-label">Event Type</label>
+                <select class="form-select trigger-type">
+                    {% for value, label in trigger_types %}
+                    <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-7">
+                <label class="form-label">Action Configuration</label>
+                <textarea class="form-control action-config" rows="4"></textarea>
+            </div>
+            <div class="col-md-1">
+                <div class="d-flex flex-column h-100 justify-content-center align-items-center">
+                    <button type="button" class="btn btn-danger remove-step mb-2">
+                        <i class="bi bi-trash"></i> ×
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Add a new step
+        $('#add-step').click(function() {
+            const template = document.querySelector('#step-template');
+            const clone = document.importNode(template.content, true);
+            $('#steps-container').append(clone);
+            
+            // Add event listener to the new remove button
+            $('.remove-step').last().click(function() {
+                $(this).closest('.workflow-step').remove();
+            });
+        });
+        
+        // Remove step event listener for existing steps
+        $('.remove-step').click(function() {
+            $(this).closest('.workflow-step').remove();
+        });
+        
+        // Save workflow
+        $('#save-workflow').click(function() {
+            const steps = [];
+            
+            $('.workflow-step').each(function() {
+                const step = {
+                    trigger_type: $(this).find('.trigger-type').val(),
+                    action_config: $(this).find('.action-config').val()
+                };
+                steps.push(step);
+            });
+            
+            const data = { steps: steps };
+            
+            $.ajax({
+                url: '{% url "save_workflow" workflow.id %}',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#yaml-preview').text(response.yaml);
+                        alert('Workflow saved successfully!');
+                    } else {
+                        alert('Error saving workflow: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('Error saving workflow.');
+                }
+            });
+        });
+        
+        // Add initial step if none exists
+        if ($('.workflow-step').length === 0) {
+            $('#add-step').click();
+        }
+    });
+</script>
+{% endblock %}

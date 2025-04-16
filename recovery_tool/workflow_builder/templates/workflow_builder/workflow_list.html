@@ -1,0 +1,48 @@
+<!-- recovery_tool/workflow_builder/templates/workflow_builder/workflow_list.html -->
+{% extends 'workflow_builder/base.html' %}
+
+{% block title %}Workflows{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1>Workflows</h1>
+        <a href="{% url 'create_workflow' %}" class="btn btn-primary mb-3">Create New Workflow</a>
+        
+        {% if workflows %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Created</th>
+                            <th>Updated</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for workflow in workflows %}
+                        <tr>
+                            <td>{{ workflow.name }}</td>
+                            <td>{{ workflow.description|truncatechars:50 }}</td>
+                            <td>{{ workflow.created_at|date:"M d, Y H:i" }}</td>
+                            <td>{{ workflow.updated_at|date:"M d, Y H:i" }}</td>
+                            <td>
+                                <a href="{% url 'view_workflow' workflow.id %}" class="btn btn-sm btn-info">View</a>
+                                <a href="{% url 'edit_workflow' workflow.id %}" class="btn btn-sm btn-warning">Edit</a>
+                                <a href="{% url 'execute_workflow' workflow.id %}" class="btn btn-sm btn-success">Execute</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                No workflows created yet. <a href="{% url 'create_workflow' %}">Create your first workflow</a>.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

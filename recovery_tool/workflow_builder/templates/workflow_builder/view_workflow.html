@@ -1,0 +1,41 @@
+<!-- recovery_tool/workflow_builder/templates/workflow_builder/view_workflow.html -->
+{% extends 'workflow_builder/base.html' %}
+
+{% block title %}View Workflow{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1>Workflow: {{ workflow.name }}</h1>
+        <p class="text-muted">{{ workflow.description }}</p>
+        
+        <div class="mb-3">
+            <a href="{% url 'edit_workflow' workflow.id %}" class="btn btn-warning">Edit</a>
+            <a href="{% url 'execute_workflow' workflow.id %}" class="btn btn-success">Execute</a>
+            <a href="{% url 'workflow_list' %}" class="btn btn-secondary">Back to List</a>
+        </div>
+        
+        <h3>Steps</h3>
+        {% if steps %}
+            {% for step in steps %}
+            <div class="workflow-step">
+                <h5>Step {{ forloop.counter }}: {{ step.get_trigger_type_display }}</h5>
+                <div class="mt-2">
+                    <strong>Action Configuration:</strong>
+                    <pre class="border p-2 bg-light mt-1">{{ step.action_config }}</pre>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="alert alert-info">This workflow has no steps yet.</div>
+        {% endif %}
+        
+        <h3 class="mt-4">YAML Definition</h3>
+        {% if yaml_content %}
+            <pre class="border p-3 bg-light">{{ yaml_content }}</pre>
+        {% else %}
+            <div class="alert alert-warning">No YAML has been generated for this workflow yet.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
