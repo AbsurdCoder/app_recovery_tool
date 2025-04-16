@@ -1,0 +1,8 @@
+workflow:
+  description: ''
+  name: Chirag
+  steps:
+  - action_config: test
+    trigger_type: mq
+  - action_config: ''
+    trigger_type: kafka

@@ -1,0 +1,10 @@
+workflow:
+  description: ''
+  name: TEST APP
+  steps:
+  - action_config: DLQ-KAFKA
+    trigger_type: kafka_to_kafka
+  - action_config: MQError - KAFFA
+    trigger_type: mq_to_kafka
+  - action_config: test
+    trigger_type: mq_to_mq
