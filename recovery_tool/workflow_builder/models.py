@@ -22,10 +22,19 @@ class WorkflowStep(models.Model):
         ('mq_to_kafka', 'MQ to Kafka Replay'),
         ('db_operation', 'DB Updates and Queries'),
     ]
+
+    PERSITANT_INFRA = [
+        ('kafka', 'Kafka'),
+        ('mq', 'MQ'),
+        ('cps', 'CPS'),
+        ('database', 'DB'),
+    ]
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     workflow = models.ForeignKey(Workflow, related_name='steps', on_delete=models.CASCADE)
     trigger_type = models.CharField(max_length=50, choices=TRIGGER_TYPES)
+    trigger_from = models.CharField(max_length=50, choices=PERSITANT_INFRA)
+    trigger_to = models.CharField(max_length=50, choices=PERSITANT_INFRA)
     action_config = models.TextField()
     order = models.IntegerField()
     

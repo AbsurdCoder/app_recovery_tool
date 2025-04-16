@@ -30,7 +30,8 @@ def edit_workflow(request, workflow_id):
     return render(request, 'workflow_builder/edit_workflow.html', {
         'workflow': workflow,
         'steps': steps,
-        'trigger_types': WorkflowStep.TRIGGER_TYPES
+        'trigger_from': WorkflowStep.PERSITANT_INFRA,
+        'trigger_to' : WorkflowStep.PERSITANT_INFRA
     })
 
 @csrf_exempt

@@ -18,7 +18,12 @@
                         <div class="col-md-4">
                             <label class="form-label">Event Type</label>
                             <select class="form-select trigger-type">
-                                {% for value, label in trigger_types %}
+                                {% for value, label in trigger_from %}
+                                <option value="{{ value }}" {% if step.trigger_type == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            <select class="form-select trigger-type">
+                                {% for value, label in trigger_to %}
                                 <option value="{{ value }}" {% if step.trigger_type == value %}selected{% endif %}>{{ label }}</option>
                                 {% endfor %}
                             </select>
@@ -70,7 +75,12 @@
             <div class="col-md-4">
                 <label class="form-label">Event Type</label>
                 <select class="form-select trigger-type">
-                    {% for value, label in trigger_types %}
+                    {% for value, label in trigger_from %}
+                    <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <select class="form-select trigger-type">
+                    {% for value, label in trigger_to %}
                     <option value="{{ value }}">{{ label }}</option>
                     {% endfor %}
                 </select>
