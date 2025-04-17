@@ -30,8 +30,8 @@ def edit_workflow(request, workflow_id):
     return render(request, 'workflow_builder/edit_workflow.html', {
         'workflow': workflow,
         'steps': steps,
-        'trigger_from': WorkflowStep.PERSITANT_INFRA,
-        'trigger_to' : WorkflowStep.PERSITANT_INFRA
+        'event_types': WorkflowStep.EVENT_TYPES,
+        'infra_types': WorkflowStep.INFRA_TYPES
     })
 
 @csrf_exempt
@@ -47,8 +47,11 @@ def save_workflow(request, workflow_id):
         for i, step_data in enumerate(data['steps']):
             WorkflowStep.objects.create(
                 workflow=workflow,
-                trigger_type=step_data['trigger_type'],
-                action_config=step_data['action_config'],
+                event_type=step_data['event_type'],
+                from_infra=step_data['from_infra'],
+                to_infra=step_data['to_infra'],
+                from_config=step_data['from_config'],
+                to_config=step_data['to_config'],
                 order=i
             )
         
@@ -77,8 +80,11 @@ def generate_yaml(workflow):
     
     for step in workflow.steps.all().order_by('order'):
         step_dict = {
-            'trigger_type': step.trigger_type,
-            'action_config': step.action_config
+            'event_type': step.event_type,
+            'from_infra': step.from_infra,
+            'to_infra': step.to_infra,
+            'from_config': step.from_config,
+            'to_config': step.to_config
         }
         workflow_dict['workflow']['steps'].append(step_dict)
     

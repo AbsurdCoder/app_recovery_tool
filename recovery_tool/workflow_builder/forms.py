@@ -10,7 +10,8 @@ class WorkflowForm(forms.ModelForm):
 class WorkflowStepForm(forms.ModelForm):
     class Meta:
         model = WorkflowStep
-        fields = ['trigger_type', 'action_config']
+        fields = ['event_type', 'from_infra', 'to_infra', 'from_config', 'to_config']
         widgets = {
-            'action_config': forms.Textarea(attrs={'rows': 4}),
+            'from_config': forms.Textarea(attrs={'rows': 4}),
+            'to_config': forms.Textarea(attrs={'rows': 4}),
         }

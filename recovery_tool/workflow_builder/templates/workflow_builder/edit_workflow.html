@@ -14,29 +14,59 @@
                 <!-- Steps will be added here dynamically -->
                 {% for step in steps %}
                 <div class="workflow-step" data-step-id="{{ step.id }}">
-                    <div class="row">
+                    <div class="row mb-3">
                         <div class="col-md-4">
                             <label class="form-label">Event Type</label>
-                            <select class="form-select trigger-type">
-                                {% for value, label in trigger_from %}
-                                <option value="{{ value }}" {% if step.trigger_type == value %}selected{% endif %}>{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                            <select class="form-select trigger-type">
-                                {% for value, label in trigger_to %}
-                                <option value="{{ value }}" {% if step.trigger_type == value %}selected{% endif %}>{{ label }}</option>
+                            <select class="form-select event-type">
+                                {% for value, label in event_types %}
+                                <option value="{{ value }}" {% if step.event_type == value %}selected{% endif %}>{{ label }}</option>
                                 {% endfor %}
                             </select>
                         </div>
                         <div class="col-md-7">
-                            <label class="form-label">Action Configuration</label>
-                            <textarea class="form-control action-config" rows="4">{{ step.action_config }}</textarea>
+                            <!-- Empty space for alignment -->
                         </div>
                         <div class="col-md-1">
                             <div class="d-flex flex-column h-100 justify-content-center align-items-center">
                                 <button type="button" class="btn btn-danger remove-step mb-2">
                                     <i class="bi bi-trash"></i> ×
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="from-section">
+                                <h5>From</h5>
+                                <div class="mb-3">
+                                    <label class="form-label">Infrastructure Type</label>
+                                    <select class="form-select from-infra">
+                                        {% for value, label in infra_types %}
+                                        <option value="{{ value }}" {% if step.from_infra == value %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Configuration Details</label>
+                                    <textarea class="form-control from-config" rows="4">{{ step.from_config }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="to-section">
+                                <h5>To</h5>
+                                <div class="mb-3">
+                                    <label class="form-label">Infrastructure Type</label>
+                                    <select class="form-select to-infra">
+                                        {% for value, label in infra_types %}
+                                        <option value="{{ value }}" {% if step.to_infra == value %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Configuration Details</label>
+                                    <textarea class="form-control to-config" rows="4">{{ step.to_config }}</textarea>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -71,29 +101,59 @@
 <!-- Step template (hidden) -->
 <template id="step-template">
     <div class="workflow-step">
-        <div class="row">
+        <div class="row mb-3">
             <div class="col-md-4">
                 <label class="form-label">Event Type</label>
-                <select class="form-select trigger-type">
-                    {% for value, label in trigger_from %}
-                    <option value="{{ value }}">{{ label }}</option>
-                    {% endfor %}
-                </select>
-                <select class="form-select trigger-type">
-                    {% for value, label in trigger_to %}
+                <select class="form-select event-type">
+                    {% for value, label in event_types %}
                     <option value="{{ value }}">{{ label }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div class="col-md-7">
-                <label class="form-label">Action Configuration</label>
-                <textarea class="form-control action-config" rows="4"></textarea>
+                <!-- Empty space for alignment -->
             </div>
             <div class="col-md-1">
                 <div class="d-flex flex-column h-100 justify-content-center align-items-center">
                     <button type="button" class="btn btn-danger remove-step mb-2">
                         <i class="bi bi-trash"></i> ×
                     </button>
+                </div>
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="from-section">
+                    <h5>From</h5>
+                    <div class="mb-3">
+                        <label class="form-label">Infrastructure Type</label>
+                        <select class="form-select from-infra">
+                            {% for value, label in infra_types %}
+                            <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Configuration Details</label>
+                        <textarea class="form-control from-config" rows="4"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="to-section">
+                    <h5>To</h5>
+                    <div class="mb-3">
+                        <label class="form-label">Infrastructure Type</label>
+                        <select class="form-select to-infra">
+                            {% for value, label in infra_types %}
+                            <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Configuration Details</label>
+                        <textarea class="form-control to-config" rows="4"></textarea>
+                    </div>
                 </div>
             </div>
         </div>
@@ -110,10 +170,30 @@
             const clone = document.importNode(template.content, true);
             $('#steps-container').append(clone);
             
-            // Add event listener to the new remove button
-            $('.remove-step').last().click(function() {
+            // Add event listeners to the new elements
+            const newStep = $('.workflow-step').last();
+            
+            // Event type change listener
+            newStep.find('.event-type').change(function() {
+                handleEventTypeChange($(this));
+            });
+            
+            // Infrastructure type change listeners
+            newStep.find('.from-infra').change(function() {
+                handleInfraTypeChange($(this), 'from');
+            });
+            
+            newStep.find('.to-infra').change(function() {
+                handleInfraTypeChange($(this), 'to');
+            });
+            
+            // Remove step listener
+            newStep.find('.remove-step').click(function() {
                 $(this).closest('.workflow-step').remove();
             });
+            
+            // Trigger initial event type change to set up the UI
+            handleEventTypeChange(newStep.find('.event-type'));
         });
         
         // Remove step event listener for existing steps
@@ -127,8 +207,11 @@
             
             $('.workflow-step').each(function() {
                 const step = {
-                    trigger_type: $(this).find('.trigger-type').val(),
-                    action_config: $(this).find('.action-config').val()
+                    event_type: $(this).find('.event-type').val(),
+                    from_infra: $(this).find('.from-infra').val(),
+                    to_infra: $(this).find('.to-infra').val(),
+                    from_config: $(this).find('.from-config').val(),
+                    to_config: $(this).find('.to-config').val()
                 };
                 steps.push(step);
             });
@@ -152,6 +235,105 @@
                     alert('Error saving workflow.');
                 }
             });
+        });
+        
+        // Event type change handler
+        function handleEventTypeChange(selectElement) {
+            const step = selectElement.closest('.workflow-step');
+            const eventType = selectElement.val();
+            
+            // Show/hide from/to sections based on event type
+            if (eventType === 'dump' || eventType === 'extract') {
+                // For dump and extract, we only need "from" section
+                step.find('.to-section').hide();
+                step.find('.from-section').addClass('col-12').removeClass('col-md-6');
+            } else if (eventType === 'load') {
+                // For load, we only need "to" section
+                step.find('.from-section').hide();
+                step.find('.to-section').addClass('col-12').removeClass('col-md-6');
+            } else {
+                // For replay and transform, we need both sections
+                step.find('.from-section').show().addClass('col-md-6').removeClass('col-12');
+                step.find('.to-section').show().addClass('col-md-6').removeClass('col-12');
+            }
+            
+            // Update configuration field labels based on event type
+            updateConfigLabels(step, eventType);
+            
+            // Trigger infra type change to update config fields
+            handleInfraTypeChange(step.find('.from-infra'), 'from');
+            handleInfraTypeChange(step.find('.to-infra'), 'to');
+        }
+        
+        // Infrastructure type change handler
+        function handleInfraTypeChange(selectElement, direction) {
+            const step = selectElement.closest('.workflow-step');
+            const infraType = selectElement.val();
+            const configField = step.find(`.${direction}-config`);
+            
+            // Update placeholder and help text based on infra type
+            switch(infraType) {
+                case 'kafka':
+                    configField.attr('placeholder', 'Enter Kafka configuration (bootstrap servers, topic, etc.)');
+                    break;
+                case 'mq':
+                    configField.attr('placeholder', 'Enter MQ configuration (queue manager, channel, etc.)');
+                    break;
+                case 'db':
+                    configField.attr('placeholder', 'Enter database configuration (connection string, query, etc.)');
+                    break;
+                case 'servicebus':
+                    configField.attr('placeholder', 'Enter Service Bus configuration (connection string, queue/topic, etc.)');
+                    break;
+                case 'file':
+                    configField.attr('placeholder', 'Enter file system configuration (path, format, etc.)');
+                    break;
+            }
+        }
+        
+        // Update configuration field labels based on event type
+        function updateConfigLabels(step, eventType) {
+            switch(eventType) {
+                case 'replay':
+                    step.find('.from-section h5').text('Source');
+                    step.find('.to-section h5').text('Destination');
+                    break;
+                case 'dump':
+                    step.find('.from-section h5').text('Data Source');
+                    break;
+                case 'extract':
+                    step.find('.from-section h5').text('Extract From');
+                    break;
+                case 'transform':
+                    step.find('.from-section h5').text('Transform From');
+                    step.find('.to-section h5').text('Transform To');
+                    break;
+                case 'load':
+                    step.find('.to-section h5').text('Load To');
+                    break;
+            }
+        }
+        
+        // Initialize event listeners for existing steps
+        $('.workflow-step').each(function() {
+            const step = $(this);
+            
+            // Set up event type change listener
+            step.find('.event-type').change(function() {
+                handleEventTypeChange($(this));
+            });
+            
+            // Set up infrastructure type change listeners
+            step.find('.from-infra').change(function() {
+                handleInfraTypeChange($(this), 'from');
+            });
+            
+            step.find('.to-infra').change(function() {
+                handleInfraTypeChange($(this), 'to');
+            });
+            
+            // Initialize UI based on current values
+            handleEventTypeChange(step.find('.event-type'));
         });
         
         // Add initial step if none exists

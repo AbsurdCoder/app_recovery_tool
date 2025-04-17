@@ -19,10 +19,33 @@
         {% if steps %}
             {% for step in steps %}
             <div class="workflow-step">
-                <h5>Step {{ forloop.counter }}: {{ step.get_trigger_type_display }}</h5>
-                <div class="mt-2">
-                    <strong>Action Configuration:</strong>
-                    <pre class="border p-2 bg-light mt-1">{{ step.action_config }}</pre>
+                <h5>Step {{ forloop.counter }}: {{ step.get_event_type_display }}</h5>
+                <div class="row">
+                    {% if step.event_type != 'load' %}
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <strong>From: {{ step.get_from_infra_display }}</strong>
+                            </div>
+                            <div class="card-body">
+                                <pre class="m-0">{{ step.from_config }}</pre>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if step.event_type != 'dump' and step.event_type != 'extract' %}
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <strong>To: {{ step.get_to_infra_display }}</strong>
+                            </div>
+                            <div class="card-body">
+                                <pre class="m-0">{{ step.to_config }}</pre>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
             {% endfor %}
