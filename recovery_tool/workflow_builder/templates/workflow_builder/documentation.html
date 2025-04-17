@@ -1,0 +1,1168 @@
+<!-- recovery_tool/workflow_builder/templates/workflow_builder/documentation.html -->
+{% extends 'workflow_builder/base.html' %}
+
+{% block title %}Documentation{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Documentation-specific styles */
+    .doc-sidebar {
+        position: sticky;
+        top: 20px;
+        height: calc(100vh - 40px);
+        overflow-y: auto;
+        padding-right: 15px;
+    }
+    
+    .doc-sidebar .nav-link {
+        padding: 0.5rem 1rem;
+        border-left: 3px solid transparent;
+    }
+    
+    .doc-sidebar .nav-link:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+    
+    .doc-sidebar .nav-link.active {
+        border-left-color: var(--primary-color);
+        color: var(--primary-color) !important;
+        font-weight: 600;
+    }
+    
+    .doc-section {
+        padding-top: 20px;
+        margin-bottom: 40px;
+    }
+    
+    .doc-section h2 {
+        color: var(--primary-color);
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 20px;
+    }
+    
+    .doc-section h3 {
+        margin-top: 30px;
+        margin-bottom: 15px;
+    }
+    
+    .doc-section code {
+        background-color: #f8f9fa;
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #e83e8c;
+    }
+    
+    .doc-section .code-block {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 6px;
+        border: 1px solid #eaecef;
+        margin-bottom: 20px;
+        position: relative;
+    }
+    
+    .doc-section .code-block .copy-btn {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    
+    .doc-section .code-block:hover .copy-btn {
+        opacity: 1;
+    }
+    
+    .doc-section .table {
+        margin-bottom: 30px;
+    }
+    
+    .doc-section .table th {
+        background-color: #f8f9fa;
+    }
+    
+    .workflow-example {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    
+    .workflow-step-example {
+        background-color: white;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .image-container {
+        margin: 20px 0;
+        text-align: center;
+    }
+    
+    .doc-image {
+        max-width: 100%;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .doc-alert {
+        background-color: #e8f4fd;
+        border-left: 4px solid #2196f3;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+    }
+    
+    .doc-note {
+        background-color: #fff8e1;
+        border-left: 4px solid #ffc107;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+    }
+    
+    .doc-warning {
+        background-color: #ffebee;
+        border-left: 4px solid #f44336;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-book me-2"></i>Documentation</h1>
+    <p class="lead">Learn how to use the Dynamic Recovery Tool to create and manage recovery workflows.</p>
+</div>
+
+<div class="row">
+    <!-- Documentation Sidebar -->
+    <div class="col-md-3">
+        <div class="doc-sidebar">
+            <h5 class="mb-3">Table of Contents</h5>
+            <nav class="nav flex-column">
+                <a class="nav-link" href="#getting-started">Getting Started</a>
+                <a class="nav-link" href="#workflows">Workflows</a>
+                <a class="nav-link ms-3" href="#creating-workflows">Creating Workflows</a>
+                <a class="nav-link ms-3" href="#editing-workflows">Editing Workflows</a>
+                <a class="nav-link ms-3" href="#executing-workflows">Executing Workflows</a>
+                <a class="nav-link" href="#event-types">Event Types</a>
+                <a class="nav-link ms-3" href="#replay">Replay</a>
+                <a class="nav-link ms-3" href="#dump">Dump</a>
+                <a class="nav-link ms-3" href="#extract">Extract</a>
+                <a class="nav-link ms-3" href="#transform">Transform</a>
+                <a class="nav-link ms-3" href="#load">Load</a>
+                <a class="nav-link" href="#infra-types">Infrastructure Types</a>
+                <a class="nav-link ms-3" href="#kafka">Kafka</a>
+                <a class="nav-link ms-3" href="#mq">MQ</a>
+                <a class="nav-link ms-3" href="#db">Database</a>
+                <a class="nav-link ms-3" href="#servicebus">Service Bus</a>
+                <a class="nav-link ms-3" href="#file">File System</a>
+                <a class="nav-link" href="#config-examples">Configuration Examples</a>
+                <a class="nav-link" href="#yaml-structure">YAML Structure</a>
+                <a class="nav-link" href="#api-reference">API Reference</a>
+                <a class="nav-link" href="#troubleshooting">Troubleshooting</a>
+                <a class="nav-link" href="#faq">FAQ</a>
+            </nav>
+            
+            <h5 class="mb-3 mt-4">Related Resources</h5>
+            <div class="list-group">
+                <a href="https://github.com/your-username/recovery-tool" class="list-group-item list-group-item-action">
+                    <i class="fab fa-github me-2"></i> GitHub Repository
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="fas fa-bug me-2"></i> Issue Tracker
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="fas fa-envelope me-2"></i> Contact Support
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Documentation Content -->
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-body">
+                <!-- Getting Started -->
+                <div id="getting-started" class="doc-section">
+                    <h2>Getting Started</h2>
+                    <p>
+                        The Dynamic Recovery Tool is designed to help you automate data recovery and migration workflows between different systems like Kafka, MQ, databases, and file systems.
+                    </p>
+                    
+                    <div class="doc-alert">
+                        <h5><i class="fas fa-info-circle me-2"></i>What You'll Need</h5>
+                        <ul>
+                            <li>Access to the Recovery Tool application</li>
+                            <li>Connection details for the systems you want to work with</li>
+                            <li>Basic understanding of your data flow</li>
+                        </ul>
+                    </div>
+                    
+                    <h3>Key Concepts</h3>
+                    <ul>
+                        <li><strong>Workflows</strong>: A sequence of steps to recover or migrate data</li>
+                        <li><strong>Event Types</strong>: The type of operation to perform (replay, dump, extract, etc.)</li>
+                        <li><strong>Infrastructure Types</strong>: The systems involved (Kafka, MQ, database, etc.)</li>
+                    </ul>
+                    
+                    <h3>Basic Workflow</h3>
+                    <ol>
+                        <li>Create a new workflow</li>
+                        <li>Add one or more steps to the workflow</li>
+                        <li>Configure each step with event type and infrastructure details</li>
+                        <li>Save the workflow</li>
+                        <li>Execute the workflow when needed</li>
+                    </ol>
+                </div>
+                
+                <!-- Workflows -->
+                <div id="workflows" class="doc-section">
+                    <h2>Workflows</h2>
+                    <p>
+                        A workflow is a sequence of steps that define a data recovery or migration process. Each workflow has a name, description, and a series of ordered steps.
+                    </p>
+                    
+                    <div id="creating-workflows">
+                        <h3>Creating Workflows</h3>
+                        <p>To create a new workflow:</p>
+                        <ol>
+                            <li>Navigate to the main dashboard</li>
+                            <li>Click the "Create New Workflow" button</li>
+                            <li>Enter a name and description for your workflow</li>
+                            <li>Click "Create and Continue" to proceed to the workflow editor</li>
+                        </ol>
+                        
+                        <div class="image-container">
+                            <img src="/api/placeholder/800/450" alt="Create Workflow Screen" class="doc-image">
+                            <p class="text-center text-muted mt-2">Figure 1: Create Workflow Screen</p>
+                        </div>
+                    </div>
+                    
+                    <div id="editing-workflows">
+                        <h3>Editing Workflows</h3>
+                        <p>
+                            In the workflow editor, you can add, edit, or remove steps. Each step represents a specific operation in your recovery process.
+                        </p>
+                        
+                        <h4>Adding Steps</h4>
+                        <ol>
+                            <li>Click the "Add Step" button at the bottom of the workflow</li>
+                            <li>Select the event type from the dropdown</li>
+                            <li>Configure the "From" and "To" sections based on the event type</li>
+                            <li>Enter the required configuration details for each infrastructure</li>
+                        </ol>
+                        
+                        <h4>Removing Steps</h4>
+                        <p>
+                            To remove a step, click the "Remove" button in the top-right corner of the step container.
+                        </p>
+                        
+                        <h4>Saving Changes</h4>
+                        <p>
+                            Click the "Save Workflow" button to save your changes. The system will generate a YAML representation of your workflow, which will be displayed at the bottom of the page.
+                        </p>
+                    </div>
+                    
+                    <div id="executing-workflows">
+                        <h3>Executing Workflows</h3>
+                        <p>
+                            To execute a workflow, click the "Execute" button in the workflow view or edit screen. The system will process each step in order and display the execution results.
+                        </p>
+                        
+                        <div class="doc-note">
+                            <h5><i class="fas fa-sticky-note me-2"></i>Note</h5>
+                            <p>
+                                Execution time depends on the amount of data being processed and the complexity of the workflow. Some workflows may take several minutes or longer to complete.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Event Types -->
+                <div id="event-types" class="doc-section">
+                    <h2>Event Types</h2>
+                    <p>
+                        Event types define the operation to be performed in a workflow step. The system supports the following event types:
+                    </p>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Event Type</th>
+                                    <th>Description</th>
+                                    <th>Required Sections</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Replay</td>
+                                    <td>Move data from one system to another</td>
+                                    <td>From, To</td>
+                                </tr>
+                                <tr>
+                                    <td>Dump</td>
+                                    <td>Extract data from a system without a specific destination</td>
+                                    <td>From only</td>
+                                </tr>
+                                <tr>
+                                    <td>Extract</td>
+                                    <td>Targeted extraction of specific data from a system</td>
+                                    <td>From only</td>
+                                </tr>
+                                <tr>
+                                    <td>Transform</td>
+                                    <td>Read data from a source, apply transformations, and write to a destination</td>
+                                    <td>From, To</td>
+                                </tr>
+                                <tr>
+                                    <td>Load</td>
+                                    <td>Load data into a target system without a specific source</td>
+                                    <td>To only</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="replay">
+                        <h3>Replay</h3>
+                        <p>
+                            The Replay event type moves data from one system to another, maintaining the original data format and order. This is useful for recovering lost messages or synchronizing systems.
+                        </p>
+                        
+                        <div class="workflow-example">
+                            <h4>Example: Kafka to Kafka Replay</h4>
+                            <div class="workflow-step-example">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h5>From: Kafka</h5>
+                                        <pre>bootstrap_servers: kafka1:9092,kafka2:9092
+topic: source-topic
+group_id: replay-group
+auto_offset_reset: earliest
+max_messages: 1000</pre>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h5>To: Kafka</h5>
+                                        <pre>bootstrap_servers: kafka3:9092,kafka4:9092
+topic: destination-topic
+acks: all</pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="dump">
+                        <h3>Dump</h3>
+                        <p>
+                            The Dump event type extracts data from a system for analysis or backup purposes. It doesn't specify a destination as the data is typically stored in the tool's temporary storage.
+                        </p>
+                        
+                        <div class="workflow-example">
+                            <h4>Example: Database Dump</h4>
+                            <div class="workflow-step-example">
+                                <h5>From: Database</h5>
+                                <pre>db_type: postgresql
+host: db.example.com
+port: 5432
+username: dbuser
+password: password
+database: production
+query: SELECT * FROM orders WHERE order_date > '2023-01-01'
+output_format: csv</pre>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="extract">
+                        <h3>Extract</h3>
+                        <p>
+                            Similar to Dump, but with more targeted extraction criteria. Extract is used when you need to pull specific data from a system based on more complex criteria.
+                        </p>
+                    </div>
+                    
+                    <div id="transform">
+                        <h3>Transform</h3>
+                        <p>
+                            The Transform event type reads data from a source, applies transformations, and writes the modified data to a destination. This is useful for data migration with format changes.
+                        </p>
+                    </div>
+                    
+                    <div id="load">
+                        <h3>Load</h3>
+                        <p>
+                            The Load event type is used to input data into a target system. This is typically used when the data source is external to the workflow (e.g., a previously exported file).
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Infrastructure Types -->
+                <div id="infra-types" class="doc-section">
+                    <h2>Infrastructure Types</h2>
+                    <p>
+                        The system supports various infrastructure types as sources and destinations for data operations.
+                    </p>
+                    
+                    <div id="kafka">
+                        <h3>Kafka</h3>
+                        <p>
+                            Apache Kafka is a distributed event streaming platform used for high-performance data pipelines, streaming analytics, and data integration.
+                        </p>
+
+
+                        <h4>Configuration Parameters</h4>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Parameter</th>
+                                        <th>Description</th>
+                                        <th>Required</th>
+                                        <th>Example</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>bootstrap_servers</td>
+                                        <td>Comma-separated list of Kafka broker addresses</td>
+                                        <td>Yes</td>
+                                        <td>kafka1:9092,kafka2:9092</td>
+                                    </tr>
+                                    <tr>
+                                        <td>topic</td>
+                                        <td>Kafka topic name</td>
+                                        <td>Yes</td>
+                                        <td>my-topic</td>
+                                    </tr>
+                                    <tr>
+                                        <td>group_id</td>
+                                        <td>Consumer group ID (only for source)</td>
+                                        <td>Yes (for source)</td>
+                                        <td>recovery-group</td>
+                                    </tr>
+                                    <tr>
+                                        <td>auto_offset_reset</td>
+                                        <td>Where to start consuming from</td>
+                                        <td>No</td>
+                                        <td>earliest, latest</td>
+                                    </tr>
+                                    <tr>
+                                        <td>max_messages</td>
+                                        <td>Maximum number of messages to process</td>
+                                        <td>No</td>
+                                        <td>1000</td>
+                                    </tr>
+                                    <tr>
+                                        <td>acks</td>
+                                        <td>Producer acknowledgment level (only for destination)</td>
+                                        <td>No</td>
+                                        <td>all, 1, 0</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div id="mq">
+                        <h3>MQ</h3>
+                        <p>
+                            IBM MQ (formerly WebSphere MQ) is an enterprise message queue middleware that facilitates the integration of applications and data across multiple platforms.
+                        </p>
+                        
+                        <h4>Configuration Parameters</h4>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Parameter</th>
+                                        <th>Description</th>
+                                        <th>Required</th>
+                                        <th>Example</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>queue_manager</td>
+                                        <td>MQ queue manager name</td>
+                                        <td>Yes</td>
+                                        <td>QM1</td>
+                                    </tr>
+                                    <tr>
+                                        <td>channel</td>
+                                        <td>MQ channel name</td>
+                                        <td>Yes</td>
+                                        <td>DEV.APP.SVRCONN</td>
+                                    </tr>
+                                    <tr>
+                                        <td>host</td>
+                                        <td>MQ server hostname</td>
+                                        <td>Yes</td>
+                                        <td>mq.example.com</td>
+                                    </tr>
+                                    <tr>
+                                        <td>port</td>
+                                        <td>MQ server port</td>
+                                        <td>Yes</td>
+                                        <td>1414</td>
+                                    </tr>
+                                    <tr>
+                                        <td>queue_name</td>
+                                        <td>MQ queue name</td>
+                                        <td>Yes</td>
+                                        <td>DEV.QUEUE.1</td>
+                                    </tr>
+                                    <tr>
+                                        <td>username</td>
+                                        <td>MQ username for authentication</td>
+                                        <td>No</td>
+                                        <td>mquser</td>
+                                    </tr>
+                                    <tr>
+                                        <td>password</td>
+                                        <td>MQ password for authentication</td>
+                                        <td>No</td>
+                                        <td>password</td>
+                                    </tr>
+                                    <tr>
+                                        <td>max_messages</td>
+                                        <td>Maximum number of messages to process</td>
+                                        <td>No</td>
+                                        <td>1000</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div id="db">
+                        <h3>Database</h3>
+                        <p>
+                            Database infrastructure allows you to work with various SQL and NoSQL databases, including PostgreSQL, MySQL, Oracle, SQL Server, and MongoDB.
+                        </p>
+                        
+                        <h4>Configuration Parameters</h4>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Parameter</th>
+                                        <th>Description</th>
+                                        <th>Required</th>
+                                        <th>Example</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>db_type</td>
+                                        <td>Type of database</td>
+                                        <td>Yes</td>
+                                        <td>postgresql, mysql, oracle, sqlserver, mongodb</td>
+                                    </tr>
+                                    <tr>
+                                        <td>host</td>
+                                        <td>Database server hostname</td>
+                                        <td>Yes</td>
+                                        <td>db.example.com</td>
+                                    </tr>
+                                    <tr>
+                                        <td>port</td>
+                                        <td>Database server port</td>
+                                        <td>Yes</td>
+                                        <td>5432 (PostgreSQL), 3306 (MySQL)</td>
+                                    </tr>
+                                    <tr>
+                                        <td>username</td>
+                                        <td>Database username</td>
+                                        <td>Yes</td>
+                                        <td>dbuser</td>
+                                    </tr>
+                                    <tr>
+                                        <td>password</td>
+                                        <td>Database password</td>
+                                        <td>Yes</td>
+                                        <td>password</td>
+                                    </tr>
+                                    <tr>
+                                        <td>database</td>
+                                        <td>Database name</td>
+                                        <td>Yes</td>
+                                        <td>mydb</td>
+                                    </tr>
+                                    <tr>
+                                        <td>query</td>
+                                        <td>SQL query for reading/writing data</td>
+                                        <td>Yes</td>
+                                        <td>SELECT * FROM table WHERE id > 1000</td>
+                                    </tr>
+                                    <tr>
+                                        <td>batch_size</td>
+                                        <td>Number of records to process in a batch</td>
+                                        <td>No</td>
+                                        <td>100</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div id="servicebus">
+                        <h3>Service Bus</h3>
+                        <p>
+                            Service Bus messaging infrastructure (such as Azure Service Bus) enables communication between applications and services.
+                        </p>
+                        
+                        <h4>Configuration Parameters</h4>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Parameter</th>
+                                        <th>Description</th>
+                                        <th>Required</th>
+                                        <th>Example</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>connection_string</td>
+                                        <td>Service Bus connection string</td>
+                                        <td>Yes</td>
+                                        <td>Endpoint=sb://namespace.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=key</td>
+                                    </tr>
+                                    <tr>
+                                        <td>queue_name</td>
+                                        <td>Name of the Service Bus queue</td>
+                                        <td>Yes (for queue)</td>
+                                        <td>myqueue</td>
+                                    </tr>
+                                    <tr>
+                                        <td>topic_name</td>
+                                        <td>Name of the Service Bus topic</td>
+                                        <td>Yes (for topic)</td>
+                                        <td>mytopic</td>
+                                    </tr>
+                                    <tr>
+                                        <td>subscription_name</td>
+                                        <td>Name of the topic subscription</td>
+                                        <td>Yes (for topic)</td>
+                                        <td>mysubscription</td>
+                                    </tr>
+                                    <tr>
+                                        <td>max_messages</td>
+                                        <td>Maximum number of messages to process</td>
+                                        <td>No</td>
+                                        <td>1000</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div id="file">
+                        <h3>File System</h3>
+                        <p>
+                            File System infrastructure allows you to read from and write to files on disk, including CSV, JSON, XML, and other formats.
+                        </p>
+                        
+                        <h4>Configuration Parameters</h4>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Parameter</th>
+                                        <th>Description</th>
+                                        <th>Required</th>
+                                        <th>Example</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>path</td>
+                                        <td>File path or directory</td>
+                                        <td>Yes</td>
+                                        <td>/path/to/file.csv</td>
+                                    </tr>
+                                    <tr>
+                                        <td>format</td>
+                                        <td>File format</td>
+                                        <td>Yes</td>
+                                        <td>csv, json, xml, text</td>
+                                    </tr>
+                                    <tr>
+                                        <td>delimiter</td>
+                                        <td>Delimiter for CSV files</td>
+                                        <td>No</td>
+                                        <td>,</td>
+                                    </tr>
+                                    <tr>
+                                        <td>encoding</td>
+                                        <td>File encoding</td>
+                                        <td>No</td>
+                                        <td>utf-8, latin1</td>
+                                    </tr>
+                                    <tr>
+                                        <td>header</td>
+                                        <td>Whether CSV files have a header row</td>
+                                        <td>No</td>
+                                        <td>true, false</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Configuration Examples -->
+                <div id="config-examples" class="doc-section">
+                    <h2>Configuration Examples</h2>
+                    <p>
+                        Here are some common workflow configurations to help you get started.
+                    </p>
+                    
+                    <h3>Example 1: Kafka Message Recovery</h3>
+                    <p>This workflow replays messages from one Kafka topic to another.</p>
+                    
+                    <div class="code-block">
+<pre>workflow:
+  name: Kafka Message Recovery
+  description: Replay messages from a source topic to a destination topic
+  steps:
+    - event_type: replay
+      from_infra: kafka
+      to_infra: kafka
+      from_config: |
+        bootstrap_servers: kafka-source:9092
+        topic: source-topic
+        group_id: recovery-group
+        auto_offset_reset: earliest
+        max_messages: 10000
+      to_config: |
+        bootstrap_servers: kafka-dest:9092
+        topic: destination-topic
+        acks: all</pre>
+                        <button class="btn btn-sm btn-outline-secondary copy-btn">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                    
+                    <h3>Example 2: Database to MQ</h3>
+                    <p>This workflow extracts data from a database and sends it to an MQ queue.</p>
+                    
+                    <div class="code-block">
+<pre>workflow:
+  name: DB to MQ Migration
+  description: Extract data from database and send to MQ
+  steps:
+    - event_type: replay
+      from_infra: db
+      to_infra: mq
+      from_config: |
+        db_type: postgresql
+        host: db.example.com
+        port: 5432
+        username: dbuser
+        password: password
+        database: sourcedb
+        query: SELECT id, customer_id, order_data FROM orders WHERE created_at > '2023-01-01'
+        batch_size: 100
+      to_config: |
+        queue_manager: QM1
+        channel: DEV.APP.SVRCONN
+        host: mq.example.com
+        port: 1414
+        queue_name: ORDER.QUEUE</pre>
+                        <button class="btn btn-sm btn-outline-secondary copy-btn">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                    
+                    <h3>Example 3: Multi-Step Workflow</h3>
+                    <p>This workflow demonstrates a multi-step process with different operations.</p>
+                    
+                    <div class="code-block">
+<pre>workflow:
+  name: Data Migration Pipeline
+  description: Extract from DB, transform, and load to multiple destinations
+  steps:
+    - event_type: extract
+      from_infra: db
+      from_config: |
+        db_type: mysql
+        host: sourcedb.example.com
+        port: 3306
+        username: root
+        password: password
+        database: legacy_db
+        query: SELECT * FROM customers WHERE region = 'EMEA'
+        
+    - event_type: transform
+      from_infra: file
+      to_infra: file
+      from_config: |
+        path: /tmp/extracted_data.csv
+        format: csv
+        header: true
+      to_config: |
+        path: /tmp/transformed_data.json
+        format: json
+        
+    - event_type: load
+      to_infra: kafka
+      to_config: |
+        bootstrap_servers: kafka1:9092,kafka2:9092
+        topic: customers-topic
+        acks: all</pre>
+                        <button class="btn btn-sm btn-outline-secondary copy-btn">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- YAML Structure -->
+                <div id="yaml-structure" class="doc-section">
+                    <h2>YAML Structure</h2>
+                    <p>
+                        The Recovery Tool uses YAML files to define workflows. Understanding the structure helps when you need to edit or create workflows manually.
+                    </p>
+                    
+                    <h3>Top-Level Structure</h3>
+                    <div class="code-block">
+<pre>workflow:
+  name: [Workflow Name]
+  description: [Optional Description]
+  steps:
+    - [Step 1]
+    - [Step 2]
+    # More steps as needed</pre>
+                        <button class="btn btn-sm btn-outline-secondary copy-btn">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                    
+                    <h3>Step Structure</h3>
+                    <div class="code-block">
+<pre>- event_type: [Event Type]
+  from_infra: [Infrastructure Type for Source]  # Optional for 'load' event type
+  to_infra: [Infrastructure Type for Destination]  # Optional for 'dump' and 'extract' event types
+  from_config: |
+    [Source Configuration in YAML format]
+  to_config: |
+    [Destination Configuration in YAML format]</pre>
+                        <button class="btn btn-sm btn-outline-secondary copy-btn">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="doc-note">
+                        <h5><i class="fas fa-sticky-note me-2"></i>Note</h5>
+                        <p>
+                            The pipe character (|) in YAML indicates a multi-line string. This allows you to write configuration details in a readable format with proper indentation.
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- API Reference -->
+                <div id="api-reference" class="doc-section">
+                    <h2>API Reference</h2>
+                    <p>
+                        The Recovery Tool provides a RESTful API for programmatic control. This section describes the available endpoints.
+                    </p>
+                    
+                    <h3>Authentication</h3>
+                    <p>
+                        All API calls require authentication. Use your API key as a bearer token in the Authorization header:
+                    </p>
+                    <div class="code-block">
+<pre>Authorization: Bearer your-api-key-here</pre>
+                        <button class="btn btn-sm btn-outline-secondary copy-btn">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                    
+                    <h3>Endpoints</h3>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Endpoint</th>
+                                    <th>Method</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>/api/workflows/</td>
+                                    <td>GET</td>
+                                    <td>List all workflows</td>
+                                </tr>
+                                <tr>
+                                    <td>/api/workflows/{id}/</td>
+                                    <td>GET</td>
+                                    <td>Get workflow details</td>
+                                </tr>
+                                <tr>
+                                    <td>/api/workflows/</td>
+                                    <td>POST</td>
+                                    <td>Create a new workflow</td>
+                                </tr>
+                                <tr>
+                                    <td>/api/workflows/{id}/</td>
+                                    <td>PUT</td>
+                                    <td>Update a workflow</td>
+                                </tr>
+                                <tr>
+                                    <td>/api/workflows/{id}/</td>
+                                    <td>DELETE</td>
+                                    <td>Delete a workflow</td>
+                                </tr>
+                                <tr>
+                                    <td>/api/workflows/{id}/execute/</td>
+                                    <td>POST</td>
+                                    <td>Execute a workflow</td>
+                                </tr>
+                                <tr>
+                                    <td>/api/workflows/{id}/status/</td>
+                                    <td>GET</td>
+                                    <td>Get workflow execution status</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <h3>Example: Create a Workflow</h3>
+                    <div class="code-block">
+<pre>POST /api/workflows/
+Content-Type: application/json
+Authorization: Bearer your-api-key-here
+
+{
+  "name": "API Created Workflow",
+  "description": "Created via the REST API",
+  "steps": [
+    {
+      "event_type": "replay",
+      "from_infra": "kafka",
+      "to_infra": "kafka",
+      "from_config": "bootstrap_servers: kafka1:9092\ntopic: source-topic\ngroup_id: api-group",
+      "to_config": "bootstrap_servers: kafka2:9092\ntopic: dest-topic"
+    }
+  ]
+}</pre>
+                        <button class="btn btn-sm btn-outline-secondary copy-btn">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Troubleshooting -->
+                <div id="troubleshooting" class="doc-section">
+                    <h2>Troubleshooting</h2>
+                    <p>
+                        Common issues and their solutions.
+                    </p>
+                    
+                    <h3>Connection Issues</h3>
+                    <div class="card mb-4">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0">Error: Failed to connect to Kafka</h5>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Symptom:</strong> The workflow fails with a Kafka connection error.</p>
+                            <p><strong>Possible Causes:</strong></p>
+                            <ul>
+                                <li>Incorrect bootstrap server addresses</li>
+                                <li>Network connectivity issues</li>
+                                <li>Security configuration (SSL/SASL) missing</li>
+                            </ul>
+                            <p><strong>Solution:</strong></p>
+                            <ol>
+                                <li>Verify the bootstrap server addresses are correct</li>
+                                <li>Check network connectivity (firewalls, VPN, etc.)</li>
+                                <li>Add security configuration if required</li>
+                            </ol>
+                        </div>
+                    </div>
+                    
+                    <h3>Data Format Issues</h3>
+                    <div class="card mb-4">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0">Error: Invalid data format</h5>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Symptom:</strong> The workflow fails with a data format or parsing error.</p>
+                            <p><strong>Possible Causes:</strong></p>
+                            <ul>
+                                <li>Mismatched data schemas between source and destination</li>
+                                <li>Incorrect serialization/deserialization settings</li>
+                                <li>Corrupted data in the source</li>
+                            </ul>
+                            <p><strong>Solution:</strong></p>
+                            <ol>
+                                <li>Verify the data schemas match between source and destination</li>
+                                <li>Check serialization settings</li>
+                                <li>Add a transform step to convert between formats if needed</li>
+                            </ol>
+                        </div>
+                    </div>
+                    
+                    <h3>Performance Issues</h3>
+                    <div class="card mb-4">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">Problem: Slow Workflow Execution</h5>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Symptom:</strong> Workflow execution takes longer than expected.</p>
+                            <p><strong>Possible Causes:</strong></p>
+                            <ul>
+                                <li>Large volume of data</li>
+                                <li>Network latency</li>
+                                <li>Resource constraints (CPU, memory)</li>
+                                <li>Inefficient queries or operations</li>
+                            </ul>
+                            <p><strong>Solution:</strong></p>
+                            <ol>
+                                <li>Use batch processing with appropriate batch sizes</li>
+                                <li>Optimize database queries</li>
+                                <li>Add indexes to database tables if applicable</li>
+                                <li>Increase resource allocation to the application</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- FAQ -->
+                <div id="faq" class="doc-section">
+                    <h2>Frequently Asked Questions</h2>
+                    
+                    <div class="accordion" id="faqAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="faqOne">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                    How many steps can a workflow have?
+                                </button>
+                            </h2>
+                            <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="faqOne" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    A workflow can have any number of steps. However, for optimal performance and maintainability, we recommend keeping workflows focused and limiting them to 10 steps or fewer. For complex operations, consider creating multiple workflows that can be executed in sequence.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="faqTwo">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                    Can I schedule workflows to run automatically?
+                                </button>
+                            </h2>
+                            <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="faqTwo" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    The current version does not include built-in scheduling. However, you can use the API to trigger workflows from external schedulers like cron, Airflow, or Jenkins. Scheduled execution is planned for a future release.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="faqThree">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                    How are sensitive connection details stored?
+                                </button>
+                            </h2>
+                            <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="faqThree" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Connection details, including passwords and keys, are stored in encrypted form in the database. However, they appear in plain text in the YAML configuration. For production environments, we recommend using environment variables or a secure secret management system.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="faqFour">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                                    Can I import/export workflows between environments?
+                                </button>
+                            </h2>
+                            <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="faqFour" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Yes, workflows are represented as YAML files which can be exported and imported between environments. This makes it easy to move workflows from development to testing and production environments.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="faqFive">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+                                    How do I implement custom transformations?
+                                </button>
+                            </h2>
+                            <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="faqFive" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    For simple transformations, you can use the built-in transform event type. For more complex transformations, you can extend the system by creating custom transformation plugins. Refer to the developer documentation for details on creating plugins.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Activate sidebar links on scroll
+        const sectionIds = [];
+        $('.doc-section').each(function() {
+            sectionIds.push($(this).attr('id'));
+        });
+        
+        // Highlight active section in sidebar
+        function highlightActiveSection() {
+            const scrollPosition = $(window).scrollTop() + 100;
+            
+            for (let i = sectionIds.length - 1; i >= 0; i--) {
+                const section = $('#' + sectionIds[i]);
+                if (scrollPosition >= section.offset().top) {
+                    $('.doc-sidebar .nav-link').removeClass('active');
+                    $('.doc-sidebar .nav-link[href="#' + sectionIds[i] + '"]').addClass('active');
+                    break;
+                }
+            }
+        }
+        
+        $(window).on('scroll', highlightActiveSection);
+        highlightActiveSection();
+        
+        // Smooth scroll to sections
+        $('.doc-sidebar .nav-link').click(function(e) {
+            e.preventDefault();
+            const target = $(this).attr('href');
+            $('html, body').animate({
+                scrollTop: $(target).offset().top - 20
+            }, 500);
+        });
+        
+        // Copy code blocks
+        $('.copy-btn').click(function() {
+            const codeBlock = $(this).siblings('pre').text();
+            navigator.clipboard.writeText(codeBlock).then(function() {
+                const btn = $('.copy-btn');
+                btn.html('<i class="fas fa-check"></i>');
+                setTimeout(function() {
+                    btn.html('<i class="fas fa-copy"></i>');
+                }, 2000);
+            });
+        });
+    });
+</script>
+{% endblock %}

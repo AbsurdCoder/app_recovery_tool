@@ -4,43 +4,61 @@
 {% block title %}Edit Workflow{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <h1>Edit Workflow: {{ workflow.name }}</h1>
-        <p class="text-muted">{{ workflow.description }}</p>
-        
+<div class="page-header">
+    <div class="header-with-button">
+        <h1><i class="fas fa-edit me-2"></i>Edit Workflow</h1>
+        <div>
+            <a href="{% url 'view_workflow' workflow.id %}" class="btn btn-info">
+                <i class="fas fa-eye me-1"></i> View
+            </a>
+            <a href="{% url 'execute_workflow' workflow.id %}" class="btn btn-success">
+                <i class="fas fa-play me-1"></i> Execute
+            </a>
+        </div>
+    </div>
+    <h4 class="text-muted mb-0">{{ workflow.name }}</h4>
+    {% if workflow.description %}
+    <p class="text-muted mt-2">{{ workflow.description }}</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="card-body">
         <div id="workflow-builder">
             <div id="steps-container">
                 <!-- Steps will be added here dynamically -->
                 {% for step in steps %}
                 <div class="workflow-step" data-step-id="{{ step.id }}">
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Event Type</label>
-                            <select class="form-select event-type">
+                    <div class="step-header">
+                        <div class="d-flex align-items-center">
+                            <div class="step-number">{{ forloop.counter }}</div>
+                            <h5 class="mb-0">Step {{ forloop.counter }}</h5>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-danger remove-step">
+                            <i class="fas fa-trash me-1"></i> Remove
+                        </button>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <label class="form-label">
+                                <i class="fas fa-cog me-1"></i> Event Type
+                            </label>
+                            <select class="form-select select2 event-type">
                                 {% for value, label in event_types %}
                                 <option value="{{ value }}" {% if step.event_type == value %}selected{% endif %}>{{ label }}</option>
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="col-md-7">
-                            <!-- Empty space for alignment -->
-                        </div>
-                        <div class="col-md-1">
-                            <div class="d-flex flex-column h-100 justify-content-center align-items-center">
-                                <button type="button" class="btn btn-danger remove-step mb-2">
-                                    <i class="bi bi-trash"></i> ×
-                                </button>
-                            </div>
-                        </div>
                     </div>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <div class="from-section">
-                                <h5>From</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="infra-section from-section">
+                                <h5><i class="fas fa-database"></i> From</h5>
                                 <div class="mb-3">
                                     <label class="form-label">Infrastructure Type</label>
-                                    <select class="form-select from-infra">
+                                    <select class="form-select select2 from-infra">
                                         {% for value, label in infra_types %}
                                         <option value="{{ value }}" {% if step.from_infra == value %}selected{% endif %}>{{ label }}</option>
                                         {% endfor %}
@@ -48,16 +66,17 @@
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Configuration Details</label>
-                                    <textarea class="form-control from-config" rows="4">{{ step.from_config }}</textarea>
+                                    <textarea class="form-control from-config" rows="5">{{ step.from_config }}</textarea>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="to-section">
-                                <h5>To</h5>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="infra-section to-section">
+                                <h5><i class="fas fa-server"></i> To</h5>
                                 <div class="mb-3">
                                     <label class="form-label">Infrastructure Type</label>
-                                    <select class="form-select to-infra">
+                                    <select class="form-select select2 to-infra">
                                         {% for value, label in infra_types %}
                                         <option value="{{ value }}" {% if step.to_infra == value %}selected{% endif %}>{{ label }}</option>
                                         {% endfor %}
@@ -65,7 +84,7 @@
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Configuration Details</label>
-                                    <textarea class="form-control to-config" rows="4">{{ step.to_config }}</textarea>
+                                    <textarea class="form-control to-config" rows="5">{{ step.to_config }}</textarea>
                                 </div>
                             </div>
                         </div>
@@ -74,60 +93,69 @@
                 {% endfor %}
             </div>
             
-            <div class="mt-3 mb-4">
+            <div class="text-center mt-4 mb-4">
                 <button id="add-step" class="btn btn-outline-primary">
-                    <i class="bi bi-plus-circle"></i> Add Step
+                    <i class="fas fa-plus-circle me-1"></i> Add Step
                 </button>
             </div>
             
             <div class="d-flex justify-content-between">
                 <div>
-                    <button id="save-workflow" class="btn btn-primary">Save Workflow</button>
-                    <a href="{% url 'workflow_list' %}" class="btn btn-secondary">Cancel</a>
+                    <button id="save-workflow" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Save Workflow
+                    </button>
+                    <a href="{% url 'workflow_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Back to List
+                    </a>
                 </div>
                 <div>
-                    <a href="{% url 'execute_workflow' workflow.id %}" class="btn btn-success">Execute</a>
+                    <a href="{% url 'execute_workflow' workflow.id %}" class="btn btn-success">
+                        <i class="fas fa-play me-1"></i> Execute
+                    </a>
                 </div>
-            </div>
-            
-            <div class="mt-4">
-                <h3>Generated YAML</h3>
-                <pre id="yaml-preview" class="border p-3 bg-light">{{ workflow.yaml_content|default:"Workflow not saved yet." }}</pre>
             </div>
         </div>
     </div>
 </div>
 
+<div class="yaml-preview-container">
+    <h3><i class="fas fa-code me-2"></i> Generated YAML</h3>
+    <pre id="yaml-preview" class="mb-0">{{ workflow.yaml_content|default:"Workflow not saved yet." }}</pre>
+</div>
+
 <!-- Step template (hidden) -->
 <template id="step-template">
     <div class="workflow-step">
-        <div class="row mb-3">
-            <div class="col-md-4">
-                <label class="form-label">Event Type</label>
-                <select class="form-select event-type">
+        <div class="step-header">
+            <div class="d-flex align-items-center">
+                <div class="step-number">1</div>
+                <h5 class="mb-0">New Step</h5>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-danger remove-step">
+                <i class="fas fa-trash me-1"></i> Remove
+            </button>
+        </div>
+        
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <label class="form-label">
+                    <i class="fas fa-cog me-1"></i> Event Type
+                </label>
+                <select class="form-select select2 event-type">
                     {% for value, label in event_types %}
                     <option value="{{ value }}">{{ label }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <div class="col-md-7">
-                <!-- Empty space for alignment -->
-            </div>
-            <div class="col-md-1">
-                <div class="d-flex flex-column h-100 justify-content-center align-items-center">
-                    <button type="button" class="btn btn-danger remove-step mb-2">
-                        <i class="bi bi-trash"></i> ×
-                    </button>
-                </div>
-            </div>
         </div>
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <div class="from-section">
-                    <h5>From</h5>
+        
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <div class="infra-section from-section">
+                    <h5><i class="fas fa-database"></i> From</h5>
                     <div class="mb-3">
                         <label class="form-label">Infrastructure Type</label>
-                        <select class="form-select from-infra">
+                        <select class="form-select select2 from-infra">
                             {% for value, label in infra_types %}
                             <option value="{{ value }}">{{ label }}</option>
                             {% endfor %}
@@ -135,16 +163,17 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Configuration Details</label>
-                        <textarea class="form-control from-config" rows="4"></textarea>
+                        <textarea class="form-control from-config" rows="5"></textarea>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="to-section">
-                    <h5>To</h5>
+            
+            <div class="col-md-6 mb-3">
+                <div class="infra-section to-section">
+                    <h5><i class="fas fa-server"></i> To</h5>
                     <div class="mb-3">
                         <label class="form-label">Infrastructure Type</label>
-                        <select class="form-select to-infra">
+                        <select class="form-select select2 to-infra">
                             {% for value, label in infra_types %}
                             <option value="{{ value }}">{{ label }}</option>
                             {% endfor %}
@@ -152,7 +181,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Configuration Details</label>
-                        <textarea class="form-control to-config" rows="4"></textarea>
+                        <textarea class="form-control to-config" rows="5"></textarea>
                     </div>
                 </div>
             </div>
@@ -161,14 +190,31 @@
 </template>
 {% endblock %}
 
+<!-- This is a continuation of the previous edit_workflow.html file -->
+
 {% block extra_js %}
 <script>
     $(document).ready(function() {
+        // Initialize Select2 for existing selects
+        $('.select2').select2({
+            theme: 'bootstrap-5',
+            width: '100%'
+        });
+        
         // Add a new step
         $('#add-step').click(function() {
             const template = document.querySelector('#step-template');
             const clone = document.importNode(template.content, true);
             $('#steps-container').append(clone);
+            
+            // Update step numbers
+            updateStepNumbers();
+            
+            // Initialize Select2 for new elements
+            $('.workflow-step').last().find('.select2').select2({
+                theme: 'bootstrap-5',
+                width: '100%'
+            });
             
             // Add event listeners to the new elements
             const newStep = $('.workflow-step').last();
@@ -190,19 +236,32 @@
             // Remove step listener
             newStep.find('.remove-step').click(function() {
                 $(this).closest('.workflow-step').remove();
+                updateStepNumbers();
             });
             
             // Trigger initial event type change to set up the UI
             handleEventTypeChange(newStep.find('.event-type'));
         });
         
+        // Function to update step numbers
+        function updateStepNumbers() {
+            $('.workflow-step').each(function(index) {
+                $(this).find('.step-number').text(index + 1);
+                $(this).find('.step-header h5').text('Step ' + (index + 1));
+            });
+        }
+        
         // Remove step event listener for existing steps
         $('.remove-step').click(function() {
             $(this).closest('.workflow-step').remove();
+            updateStepNumbers();
         });
         
         // Save workflow
         $('#save-workflow').click(function() {
+            const saveBtn = $(this);
+            saveBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Saving...');
+            
             const steps = [];
             
             $('.workflow-step').each(function() {
@@ -226,13 +285,17 @@
                 success: function(response) {
                     if (response.status === 'success') {
                         $('#yaml-preview').text(response.yaml);
-                        alert('Workflow saved successfully!');
+                        
+                        // Show success notification
+                        showNotification('Success', 'Workflow saved successfully!', 'success');
                     } else {
-                        alert('Error saving workflow: ' + response.message);
+                        showNotification('Error', 'Error saving workflow: ' + response.message, 'danger');
                     }
+                    saveBtn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> Save Workflow');
                 },
                 error: function() {
-                    alert('Error saving workflow.');
+                    showNotification('Error', 'Error saving workflow. Please try again.', 'danger');
+                    saveBtn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> Save Workflow');
                 }
             });
         });
@@ -245,16 +308,16 @@
             // Show/hide from/to sections based on event type
             if (eventType === 'dump' || eventType === 'extract') {
                 // For dump and extract, we only need "from" section
-                step.find('.to-section').hide();
-                step.find('.from-section').addClass('col-12').removeClass('col-md-6');
+                step.find('.to-section').parent().hide();
+                step.find('.from-section').parent().removeClass('col-md-6').addClass('col-md-12');
             } else if (eventType === 'load') {
                 // For load, we only need "to" section
-                step.find('.from-section').hide();
-                step.find('.to-section').addClass('col-12').removeClass('col-md-6');
+                step.find('.from-section').parent().hide();
+                step.find('.to-section').parent().removeClass('col-md-6').addClass('col-md-12');
             } else {
                 // For replay and transform, we need both sections
-                step.find('.from-section').show().addClass('col-md-6').removeClass('col-12');
-                step.find('.to-section').show().addClass('col-md-6').removeClass('col-12');
+                step.find('.from-section').parent().show().removeClass('col-md-12').addClass('col-md-6');
+                step.find('.to-section').parent().show().removeClass('col-md-12').addClass('col-md-6');
             }
             
             // Update configuration field labels based on event type
@@ -270,23 +333,32 @@
             const step = selectElement.closest('.workflow-step');
             const infraType = selectElement.val();
             const configField = step.find(`.${direction}-config`);
+            const infraIcon = step.find(`.${direction}-section h5 i`);
+            
+            // Update icon based on infra type
+            infraIcon.removeClass('fas fa-database fas fa-server fas fa-exchange-alt fas fa-hdd fas fa-file-alt');
             
             // Update placeholder and help text based on infra type
             switch(infraType) {
                 case 'kafka':
-                    configField.attr('placeholder', 'Enter Kafka configuration (bootstrap servers, topic, etc.)');
+                    configField.attr('placeholder', 'Enter Kafka configuration:\n\nbootstrap_servers: localhost:9092\ntopic: example-topic\ngroup_id: recovery-group\n...');
+                    infraIcon.addClass('fas fa-exchange-alt');
                     break;
                 case 'mq':
-                    configField.attr('placeholder', 'Enter MQ configuration (queue manager, channel, etc.)');
+                    configField.attr('placeholder', 'Enter MQ configuration:\n\nqueue_manager: QM1\nchannel: DEV.APP.SVRCONN\nhost: localhost\nport: 1414\nqueue_name: DEV.QUEUE.1\n...');
+                    infraIcon.addClass('fas fa-server');
                     break;
                 case 'db':
-                    configField.attr('placeholder', 'Enter database configuration (connection string, query, etc.)');
+                    configField.attr('placeholder', 'Enter database configuration:\n\ndb_type: postgresql\nhost: localhost\nport: 5432\nusername: user\npassword: password\ndatabase: db_name\nquery: SELECT * FROM table\n...');
+                    infraIcon.addClass('fas fa-database');
                     break;
                 case 'servicebus':
-                    configField.attr('placeholder', 'Enter Service Bus configuration (connection string, queue/topic, etc.)');
+                    configField.attr('placeholder', 'Enter Service Bus configuration:\n\nconnection_string: Endpoint=sb://...\nqueue_name: example-queue\n...');
+                    infraIcon.addClass('fas fa-hdd');
                     break;
                 case 'file':
-                    configField.attr('placeholder', 'Enter file system configuration (path, format, etc.)');
+                    configField.attr('placeholder', 'Enter file system configuration:\n\npath: /path/to/file\nformat: csv\ndelimiter: ,\nencoding: utf-8\n...');
+                    infraIcon.addClass('fas fa-file-alt');
                     break;
             }
         }
@@ -295,23 +367,54 @@
         function updateConfigLabels(step, eventType) {
             switch(eventType) {
                 case 'replay':
-                    step.find('.from-section h5').text('Source');
-                    step.find('.to-section h5').text('Destination');
+                    step.find('.from-section h5').html('<i class="fas fa-database"></i> Source');
+                    step.find('.to-section h5').html('<i class="fas fa-server"></i> Destination');
                     break;
                 case 'dump':
-                    step.find('.from-section h5').text('Data Source');
+                    step.find('.from-section h5').html('<i class="fas fa-database"></i> Data Source');
                     break;
                 case 'extract':
-                    step.find('.from-section h5').text('Extract From');
+                    step.find('.from-section h5').html('<i class="fas fa-database"></i> Extract From');
                     break;
                 case 'transform':
-                    step.find('.from-section h5').text('Transform From');
-                    step.find('.to-section h5').text('Transform To');
+                    step.find('.from-section h5').html('<i class="fas fa-database"></i> Transform From');
+                    step.find('.to-section h5').html('<i class="fas fa-server"></i> Transform To');
                     break;
                 case 'load':
-                    step.find('.to-section h5').text('Load To');
+                    step.find('.to-section h5').html('<i class="fas fa-server"></i> Load To');
                     break;
             }
+        }
+        
+        // Function to show notification
+        function showNotification(title, message, type) {
+            // Create toast container if it doesn't exist
+            if ($('#toast-container').length === 0) {
+                $('body').append('<div id="toast-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;"></div>');
+            }
+            
+            // Create toast
+            const toastId = 'toast-' + Date.now();
+            const toast = `
+                <div id="${toastId}" class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <strong>${title}</strong>: ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>
+            `;
+            
+            // Add toast to container
+            $('#toast-container').append(toast);
+            
+            // Initialize and show toast
+            const toastElement = new bootstrap.Toast(document.getElementById(toastId), {
+                autohide: true,
+                delay: 5000
+            });
+            toastElement.show();
         }
         
         // Initialize event listeners for existing steps

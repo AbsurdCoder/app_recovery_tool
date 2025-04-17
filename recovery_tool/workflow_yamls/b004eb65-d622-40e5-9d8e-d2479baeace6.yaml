@@ -1,0 +1,9 @@
+workflow:
+  description: jhgkuyh
+  name: tesr
+  steps:
+  - event_type: replay
+    from_config: ''
+    from_infra: kafka
+    to_config: ''
+    to_infra: kafka

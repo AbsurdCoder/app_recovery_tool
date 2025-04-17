@@ -1,0 +1,292 @@
+<!-- recovery_tool/workflow_builder/templates/workflow_builder/about.html -->
+{% extends 'workflow_builder/base.html' %}
+
+{% block title %}About Us{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-info-circle me-2"></i>About The Recovery Tool</h1>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-8">
+                <h3 class="section-title">Project Overview</h3>
+                <p class="lead">
+                    Dynamic Recovery Tool is an open-source platform designed to streamline and automate data recovery and migration workflows across diverse infrastructure systems.
+                </p>
+                
+                <p>
+                    In modern enterprise environments, data often flows through multiple systems like Kafka, MQ, databases, and file systems. When issues arise, recovery operations can be complex and error-prone. Our tool provides a visual interface to define, manage, and execute recovery workflows without writing custom scripts for each scenario.
+                </p>
+                
+                <h4 class="mt-4 mb-3">Key Features</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="d-flex mb-3">
+                            <div class="me-3 text-primary">
+                                <i class="fas fa-sliders-h fa-2x"></i>
+                            </div>
+                            <div>
+                                <h5>Visual Workflow Builder</h5>
+                                <p>Create workflows using an intuitive drag-and-drop interface.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex mb-3">
+                            <div class="me-3 text-primary">
+                                <i class="fas fa-exchange-alt fa-2x"></i>
+                            </div>
+                            <div>
+                                <h5>Multiple Infrastructure Support</h5>
+                                <p>Connect to Kafka, MQ, databases, service buses, and file systems.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex mb-3">
+                            <div class="me-3 text-primary">
+                                <i class="fas fa-code fa-2x"></i>
+                            </div>
+                            <div>
+                                <h5>YAML-Based Configuration</h5>
+                                <p>Workflows are stored as YAML for version control and portability.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex mb-3">
+                            <div class="me-3 text-primary">
+                                <i class="fas fa-play-circle fa-2x"></i>
+                            </div>
+                            <div>
+                                <h5>One-Click Execution</h5>
+                                <p>Run complex recovery operations with a single click.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-light mb-4">
+                    <div class="card-body">
+                        <h4 class="card-title"><i class="fas fa-code-branch me-2"></i>Project Info</h4>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><strong>Version:</strong> 1.0.0</li>
+                            <li class="mb-2"><strong>License:</strong> MIT</li>
+                            <li class="mb-2"><strong>Framework:</strong> Django</li>
+                            <li class="mb-2">
+                                <strong>Repository:</strong> 
+                                <a href="https://github.com/AbsurdCoder/app_recovery_tool" target="_blank" class="text-decoration-none">
+                                    <i class="fab fa-github me-1"></i>GitHub
+                                </a>
+                            </li>
+                        </ul>
+                        
+                        <h5 class="mt-4">Technology Stack</h5>
+                        <div class="d-flex flex-wrap">
+                            <span class="badge bg-primary m-1 p-2">Python</span>
+                            <span class="badge bg-primary m-1 p-2">Django</span>
+                            <span class="badge bg-primary m-1 p-2">JavaScript</span>
+                            <span class="badge bg-primary m-1 p-2">Bootstrap</span>
+                            <span class="badge bg-primary m-1 p-2">YAML</span>
+                            <span class="badge bg-primary m-1 p-2">Kafka</span>
+                            <span class="badge bg-primary m-1 p-2">MQ</span>
+                            <span class="badge bg-primary m-1 p-2">SQL/NoSQL</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card border-primary">
+                    <div class="card-body">
+                        <h4 class="card-title"><i class="fas fa-hands-helping me-2"></i>Get Involved</h4>
+                        <p>We welcome contributions from the community!</p>
+                        <a href="https://github.com/AbsurdCoder/app_recovery_tool/issues" target="_blank" class="btn btn-outline-primary mb-2 w-100">
+                            <i class="fas fa-bug me-1"></i> Report Issues
+                        </a>
+                        <a href="https://github.com/AbsurdCoder/app_recovery_tool/pulls" target="_blank" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-code-branch me-1"></i> Submit PR
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h3 class="mb-0"><i class="fas fa-users me-2"></i>Our Team</h3>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4 mb-4 text-center">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 100px; height: 100px;">
+                            <i class="fas fa-user fa-3x"></i>
+                        </div>
+                        <h4>Chirag Bhatia</h4>
+                        <p class="text-muted">Project Lead & Developer</p>
+                        <p>Designed the architecture and implemented the core workflow engine.</p>
+                        <div class="d-flex justify-content-center">
+                            <a href="#" class="text-decoration-none mx-2"><i class="fab fa-github fa-lg"></i></a>
+                            <a href="#" class="text-decoration-none mx-2"><i class="fab fa-linkedin fa-lg"></i></a>
+                            <a href="#" class="text-decoration-none mx-2"><i class="fas fa-globe fa-lg"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Add more team members as needed -->
+            <div class="col-md-4 mb-4 text-center">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 100px; height: 100px;">
+                            <i class="fas fa-user fa-3x"></i>
+                        </div>
+                        <h4>Ashmita Ahuja Bhatia</h4>
+                        <p class="text-muted">UX Designer</p>
+                        <p>Designed the user interface and experience for the workflow builder.</p>
+                        <div class="d-flex justify-content-center">
+                            <a href="#" class="text-decoration-none mx-2"><i class="fab fa-github fa-lg"></i></a>
+                            <a href="#" class="text-decoration-none mx-2"><i class="fab fa-linkedin fa-lg"></i></a>
+                            <a href="#" class="text-decoration-none mx-2"><i class="fas fa-globe fa-lg"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4 text-center">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 100px; height: 100px;">
+                            <i class="fas fa-user fa-3x"></i>
+                        </div>
+                        <h4>Virtual Assistant</h4>
+                        <p class="text-muted">Backend Developer</p>
+                        <p>Implemented the integration with various messaging systems and databases.</p>
+                        <div class="d-flex justify-content-center">
+                            <a href="#" class="text-decoration-none mx-2"><i class="fab fa-github fa-lg"></i></a>
+                            <a href="#" class="text-decoration-none mx-2"><i class="fab fa-linkedin fa-lg"></i></a>
+                            <a href="#" class="text-decoration-none mx-2"><i class="fas fa-globe fa-lg"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Project Roadmap</h3>
+    </div>
+    <div class="card-body">
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="timeline-badge bg-success">
+                    <i class="fas fa-check"></i>
+                </div>
+                <div class="timeline-content">
+                    <h5>Version 1.0 (Current)</h5>
+                    <p>Core functionality with support for Kafka, MQ, DB, and file systems.</p>
+                    <ul>
+                        <li>Visual workflow builder</li>
+                        <li>YAML configuration generation</li>
+                        <li>Basic execution engine</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-badge bg-primary">
+                    <i class="fas fa-map-marker-alt"></i>
+                </div>
+                <div class="timeline-content">
+                    <h5>Version 1.5 (Upcoming)</h5>
+                    <p>Enhanced features and stability improvements.</p>
+                    <ul>
+                        <li>Scheduled workflow execution</li>
+                        <li>Execution history and logs</li>
+                        <li>Advanced transformation capabilities</li>
+                        <li>User authentication and role-based access</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-badge bg-info">
+                    <i class="fas fa-road"></i>
+                </div>
+                <div class="timeline-content">
+                    <h5>Version 2.0 (Future)</h5>
+                    <p>Major feature additions.</p>
+                    <ul>
+                        <li>Workflow templates and sharing</li>
+                        <li>Real-time execution monitoring</li>
+                        <li>Integration with CI/CD pipelines</li>
+                        <li>Additional infrastructure connectors</li>
+                        <li>REST API for programmatic control</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Additional styles for the About page */
+    .section-title {
+        color: var(--primary-color);
+        margin-bottom: 20px;
+    }
+    
+    .lead {
+        font-size: 1.25rem;
+        font-weight: 300;
+    }
+    
+    .timeline {
+        position: relative;
+        padding: 20px 0;
+    }
+    
+    .timeline:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 20px;
+        width: 3px;
+        background: #e9ecef;
+    }
+    
+    .timeline-item {
+        position: relative;
+        margin-bottom: 30px;
+        padding-left: 60px;
+    }
+    
+    .timeline-badge {
+        position: absolute;
+        left: 10px;
+        width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        text-align: center;
+        color: white;
+        line-height: 25px;
+        font-size: 12px;
+    }
+    
+    .timeline-content {
+        padding: 15px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+</style>
+{% endblock %}

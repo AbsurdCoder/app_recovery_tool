@@ -34,6 +34,18 @@ def edit_workflow(request, workflow_id):
         'infra_types': WorkflowStep.INFRA_TYPES
     })
 
+def about(request):
+    """
+    Render the About Us page.
+    """
+    return render(request, 'workflow_builder/about.html')
+
+def documentation(request):
+    """
+    Render the Documentation page.
+    """
+    return render(request, 'workflow_builder/documentation.html')
+
 @csrf_exempt
 def save_workflow(request, workflow_id):
     if request.method == 'POST':
