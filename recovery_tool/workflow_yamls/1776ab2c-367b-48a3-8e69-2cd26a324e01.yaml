@@ -1,0 +1,14 @@
+workflow:
+  description: ''
+  name: test
+  steps:
+  - event_type: replay
+    from_config: dlq
+    from_infra: kafka
+    to_config: topic
+    to_infra: kafka
+  - event_type: extract
+    from_config: select * from xyz
+    from_infra: db
+    to_config: ''
+    to_infra: kafka
