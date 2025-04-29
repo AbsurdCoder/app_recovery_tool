@@ -1,0 +1,19 @@
+workflow:
+  description: yessss
+  name: This is sparta
+  steps:
+  - event_type: replay
+    from_config: DLQ
+    from_infra: kafka
+    to_config: Topic
+    to_infra: kafka
+  - event_type: dump
+    from_config: tata
+    from_infra: kafka
+    to_config: ''
+    to_infra: kafka
+  - event_type: dump
+    from_config: query *
+    from_infra: db
+    to_config: ''
+    to_infra: kafka

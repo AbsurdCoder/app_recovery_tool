@@ -14,6 +14,9 @@
             <a href="{% url 'execute_workflow' workflow.id %}" class="btn btn-success">
                 <i class="fas fa-play me-1"></i> Execute
             </a>
+            <a href="{% url 'simulate_workflow' workflow.id %}" class="btn btn-warning me-2">
+                <i class="fas fa-vial me-1"></i> Simulate
+            </a>
         </div>
     </div>
     <h4 class="mb-0">{{ workflow.name }}</h4>

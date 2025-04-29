@@ -355,6 +355,11 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" href="{% url 'action_module' %}">
+                                <i class="fas fa-bolt me-1"></i> Action Module
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="{% url 'documentation' %}">
                                 <i class="fas fa-book me-1"></i> Documentation
                             </a>
@@ -367,7 +372,7 @@
                     </ul>
                 </div>
             </div>
-        </nav>        
+        </nav>      
 
         <div class="content">
             {% block content %}{% endblock %}

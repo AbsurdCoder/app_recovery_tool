@@ -1,6 +1,10 @@
 # recovery_tool/workflow_builder/event_handlers.py
 import json
 import yaml
+import subprocess
+import shlex
+import os
+import tempfile
 # from kafka import KafkaProducer, KafkaConsumer
 # import pymqi
 # import psycopg2
@@ -157,3 +161,95 @@ class MQtoMQHandler(BaseEventHandler):
     #             message = source_queue.get()
                 
     #             # Put
+
+
+class ShellScriptHandler(BaseActionHandler):
+    """Handler for executing shell scripts"""
+    
+    def _execute_action(self, source_config, target_config, parameters):
+        self.log("Initializing Shell Script execution")
+        
+        # For shell scripts, we use source_config to store the script content
+        if not source_config or not source_config.get('script_content'):
+            raise ValueError("Missing script content")
+        
+        script_content = source_config.get('script_content', '').strip()
+        working_directory = source_config.get('working_directory', '/tmp')
+        timeout_seconds = int(source_config.get('timeout_seconds', 60))
+        environment_vars = source_config.get('environment_vars', {})
+        
+        if not script_content:
+            raise ValueError("Script content cannot be empty")
+        
+        # Security checks
+        if ';rm -rf' in script_content or '> /dev/' in script_content:
+            raise ValueError("Potentially harmful commands detected in script")
+        
+        self.log(f"Working directory: {working_directory}")
+        self.log(f"Timeout: {timeout_seconds} seconds")
+        if environment_vars:
+            self.log(f"Environment variables: {str(environment_vars)}")
+        
+        # Create a temporary script file
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.sh', delete=False) as script_file:
+            script_path = script_file.name
+            script_file.write(script_content)
+        
+        try:
+            # Make the script executable
+            os.chmod(script_path, 0o755)
+            
+            # Prepare environment
+            env = os.environ.copy()
+            if environment_vars and isinstance(environment_vars, dict):
+                env.update(environment_vars)
+            
+            # Execute the script
+            self.log(f"Executing script at: {script_path}")
+            
+            # Run the script with subprocess
+            process = subprocess.Popen(
+                ['/bin/bash', script_path],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                cwd=working_directory,
+                env=env,
+                text=True
+            )
+            
+            # Capture output with timeout
+            try:
+                stdout, stderr = process.communicate(timeout=timeout_seconds)
+                
+                # Log the output
+                if stdout:
+                    self.log("Script output:")
+                    for line in stdout.splitlines():
+                        self.log(f"  {line}")
+                
+                # Log any errors
+                if stderr:
+                    self.log("Script errors:")
+                    for line in stderr.splitlines():
+                        self.log(f"  {line}")
+                
+                # Check return code
+                if process.returncode != 0:
+                    self.log(f"Script exited with error code: {process.returncode}")
+                    return f"Script execution failed with exit code {process.returncode}"
+                else:
+                    self.log(f"Script executed successfully")
+                    return f"Script executed successfully"
+                
+            except subprocess.TimeoutExpired:
+                process.kill()
+                _, _ = process.communicate()
+                self.log(f"Script execution timed out after {timeout_seconds} seconds")
+                raise TimeoutError(f"Script execution timed out after {timeout_seconds} seconds")
+                
+        finally:
+            # Clean up the temporary script file
+            try:
+                os.unlink(script_path)
+            except Exception as e:
+                self.log(f"Warning: Could not delete temporary script file: {e}")

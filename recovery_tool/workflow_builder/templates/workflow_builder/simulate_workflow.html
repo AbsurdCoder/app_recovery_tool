@@ -1,0 +1,551 @@
+<!-- recovery_tool/workflow_builder/templates/workflow_builder/simulate_workflow.html -->
+{% extends 'workflow_builder/base.html' %}
+
+{% block title %}Simulating Workflow{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-with-button">
+        <h1><i class="fas fa-vial me-2"></i>Workflow Simulation</h1>
+        <div>
+            <span class="badge bg-info">Test Mode</span>
+            <a href="{% url 'view_workflow' workflow.id %}" class="btn btn-info ms-2">
+                <i class="fas fa-eye me-1"></i> View Workflow
+            </a>
+            <a href="{% url 'workflow_list' %}" class="btn btn-outline-secondary ms-2">
+                <i class="fas fa-arrow-left me-1"></i> Back to List
+            </a>
+        </div>
+    </div>
+    <h4 class="mb-0">{{ workflow.name }}</h4>
+    <div class="alert alert-warning mt-3">
+        <i class="fas fa-info-circle me-2"></i> This is a simulation for testing purposes. No actual operations are being performed.
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+            <i class="fas fa-info-circle me-2"></i> Execution Status
+        </div>
+        <div id="simulation-controls">
+            <button id="pause-simulation" class="btn btn-sm btn-warning">
+                <i class="fas fa-pause me-1"></i> Pause
+            </button>
+            <button id="resume-simulation" class="btn btn-sm btn-success" style="display: none;">
+                <i class="fas fa-play me-1"></i> Resume
+            </button>
+            <button id="reset-simulation" class="btn btn-sm btn-danger ms-2">
+                <i class="fas fa-redo me-1"></i> Reset
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Status</h5>
+                        <div id="status-badge" class="mt-3 mb-3">
+                            <span class="badge rounded-pill bg-warning text-dark px-4 py-2 fs-6">
+                                <i class="fas fa-spinner fa-spin me-2"></i> 
+                                <span id="current-status">Pending</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Started</h5>
+                        <p class="card-text mt-3 fs-6" id="started-at">
+                            Initializing...
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Completed</h5>
+                        <p class="card-text mt-3 fs-6" id="completed-at">
+                            <span class="text-muted">In progress...</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Duration</h5>
+                        <p class="card-text mt-3 fs-6" id="duration">
+                            <span id="duration-counter">00:00:00</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <h5 class="mb-3"><i class="fas fa-list-ol me-2"></i>Execution Steps</h5>
+        
+        <div class="progress mb-4" style="height: 25px;">
+            <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+        </div>
+        
+        <div id="step-timeline" class="execution-timeline">
+            {% for step in steps %}
+            <div class="timeline-item step-item" data-step-order="{{ step.order }}">
+                <div class="timeline-badge bg-secondary step-badge">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="timeline-content">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5>Step {{ step.order|add:"1" }}: {{ step.step.get_event_type_display }}</h5>
+                        <span class="badge bg-secondary step-status">Pending</span>
+                    </div>
+                    
+                    <div class="step-details mb-2">
+                        <span class="badge bg-info">From: {{ step.step.get_from_infra_display }}</span>
+                        {% if step.step.to_infra %}
+                        <span class="badge bg-info">To: {{ step.step.get_to_infra_display }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="step-time text-muted mb-2">
+                        <small class="step-timing">Waiting to start...</small>
+                    </div>
+                    
+                    <div class="step-log-container mt-3" style="display: none;">
+                        <div class="card bg-dark">
+                            <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center">
+                                <small class="text-white">Log Output</small>
+                                <button class="btn btn-sm btn-link text-white p-0 toggle-log" data-expanded="false">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                            <div class="card-body py-2 step-log" style="display: none; max-height: 200px; overflow-y: auto;">
+                                <pre class="m-0 text-white step-log-content" style="font-size: 12px;"></pre>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="step-error-container mt-3" style="display: none;">
+                        <div class="alert alert-danger step-error-message"></div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .execution-timeline {
+        position: relative;
+        padding: 20px 0;
+    }
+    
+    .execution-timeline:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 20px;
+        width: 3px;
+        background: #e9ecef;
+    }
+    
+    .timeline-item {
+        position: relative;
+        margin-bottom: 30px;
+        padding-left: 60px;
+    }
+    
+    .timeline-badge {
+        position: absolute;
+        left: 10px;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        text-align: center;
+        color: white;
+        line-height: 30px;
+        z-index: 5;
+    }
+    
+    .timeline-content {
+        padding: 15px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+    
+    .step-details {
+        display: flex;
+        gap: 10px;
+        margin-top: 5px;
+    }
+    
+    .step-badge.bg-running {
+        background-color: #3949ab !important;
+        animation: pulse 1.5s infinite;
+    }
+    
+    .step-badge.bg-completed {
+        background-color: #4caf50 !important;
+    }
+    
+    .step-badge.bg-failed {
+        background-color: #f44336 !important;
+    }
+    
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(57, 73, 171, 0.7);
+        }
+        70% {
+            box-shadow: 0 0 0 10px rgba(57, 73, 171, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(57, 73, 171, 0);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Step data and simulation configuration
+        const totalSteps = {{ steps|length }};
+        const stepDurations = [
+            {% for step in steps %}
+                {{ forloop.counter|add:2 }}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];  // Random durations for each step
+        
+        let simulationStartTime = new Date("{{ start_time }}");
+        let simulationCompletedTime = null;
+        let currentStepIndex = -1;
+        let simulationStatus = 'pending';
+        let durationTimer;
+        let stepTimers = [];
+        let isPaused = false;
+        
+        // Random failure probability (10%)
+        const failureProbability = 0.1;
+        
+        // Function to update duration display
+        function updateDuration() {
+            if (isPaused) return;
+            
+            const now = simulationCompletedTime || new Date();
+            const durationMs = now - simulationStartTime;
+            
+            // Format duration
+            const seconds = Math.floor((durationMs / 1000) % 60).toString().padStart(2, '0');
+            const minutes = Math.floor((durationMs / (1000 * 60)) % 60).toString().padStart(2, '0');
+            const hours = Math.floor(durationMs / (1000 * 60 * 60)).toString().padStart(2, '0');
+            
+            $('#duration-counter').text(`${hours}:${minutes}:${seconds}`);
+        }
+        
+        // Function to update the progress bar
+        function updateProgressBar() {
+            const completedSteps = $('.step-badge.bg-completed').length;
+            const progressPercent = Math.round((completedSteps / totalSteps) * 100);
+            $('#progress-bar').css('width', `${progressPercent}%`);
+            $('#progress-bar').attr('aria-valuenow', progressPercent);
+            $('#progress-bar').text(`${progressPercent}%`);
+            
+            if (simulationStatus === 'completed') {
+                $('#progress-bar').removeClass('progress-bar-animated').addClass('bg-success');
+            } else if (simulationStatus === 'failed') {
+                $('#progress-bar').removeClass('progress-bar-animated').addClass('bg-danger');
+            }
+        }
+        
+        // Function to update the overall status
+        function updateStatus(status) {
+            simulationStatus = status;
+            
+            let statusClass = 'bg-warning text-dark';
+            let statusIcon = '<i class="fas fa-spinner fa-spin me-2"></i>';
+            let statusText = 'Pending';
+            
+            if (status === 'running') {
+                statusClass = 'bg-primary';
+                statusIcon = '<i class="fas fa-cog fa-spin me-2"></i>';
+                statusText = 'Running';
+            } else if (status === 'completed') {
+                statusClass = 'bg-success';
+                statusIcon = '<i class="fas fa-check-circle me-2"></i>';
+                statusText = 'Completed';
+                simulationCompletedTime = new Date();
+                $('#completed-at').text(simulationCompletedTime.toLocaleString());
+                clearInterval(durationTimer);
+            } else if (status === 'failed') {
+                statusClass = 'bg-danger';
+                statusIcon = '<i class="fas fa-times-circle me-2"></i>';
+                statusText = 'Failed';
+                simulationCompletedTime = new Date();
+                $('#completed-at').text(simulationCompletedTime.toLocaleString());
+                clearInterval(durationTimer);
+            }
+            
+            $('#status-badge span').removeClass().addClass(`badge rounded-pill ${statusClass} px-4 py-2 fs-6`);
+            $('#status-badge span').html(`${statusIcon} ${statusText}`);
+            $('#current-status').text(statusText);
+            
+            updateProgressBar();
+        }
+        
+        // Function to simulate step processing
+        function processStep(stepIndex) {
+            if (isPaused) return;
+            
+            if (stepIndex >= totalSteps) {
+                // All steps completed
+                updateStatus('completed');
+                return;
+            }
+            
+            currentStepIndex = stepIndex;
+            const stepElement = $(`.step-item[data-step-order="${stepIndex}"]`);
+            const stepBadge = stepElement.find('.step-badge');
+            const stepStatus = stepElement.find('.step-status');
+            const stepTiming = stepElement.find('.step-timing');
+            const stepLogContainer = stepElement.find('.step-log-container');
+            const stepLogContent = stepElement.find('.step-log-content');
+            
+            // Update step to running
+            stepBadge.removeClass('bg-secondary').addClass('bg-running');
+            stepBadge.html('<i class="fas fa-cog fa-spin"></i>');
+            stepStatus.removeClass('bg-secondary').addClass('bg-primary');
+            stepStatus.text('Running');
+            
+            // Update timing
+            const startTime = new Date();
+            stepTiming.text(`Started at ${startTime.toLocaleTimeString()}`);
+            
+            // Update overall status if this is the first step
+            if (stepIndex === 0) {
+                updateStatus('running');
+                $('#started-at').text(simulationStartTime.toLocaleString());
+            }
+            
+            // Show log container
+            stepLogContainer.show();
+            stepElement.find('.step-log').show();
+            stepElement.find('.toggle-log').data('expanded', true).html('<i class="fas fa-chevron-up"></i>');
+            
+            // Generate simulated log messages
+            const stepType = stepElement.find('h5').text().toLowerCase();
+            const logMessages = [];
+            const stepDuration = stepDurations[stepIndex] * 1000; // seconds to ms
+            const logInterval = stepDuration / 5; // 5 log messages during the step
+            
+            // First log message
+            addLogMessage(`Starting execution of step ${stepIndex + 1}...`);
+            
+            // Add log messages over time
+            let logTimer = setTimeout(function addLog() {
+                if (isPaused) {
+                    // If paused, schedule the same function to run when resumed
+                    stepTimers.push(setTimeout(addLog, 1000));
+                    return;
+                }
+                
+                // Generate a log message based on the step type
+                let logMessage;
+                if (stepType.includes('kafka')) {
+                    logMessage = `Processing Kafka messages... ${Math.floor(Math.random() * 50) + 10} messages processed.`;
+                } else if (stepType.includes('mq')) {
+                    logMessage = `Processing MQ messages... ${Math.floor(Math.random() * 40) + 5} messages processed.`;
+                } else if (stepType.includes('db')) {
+                    logMessage = `Executing database operation... ${Math.floor(Math.random() * 30) + 20} rows affected.`;
+                } else {
+                    logMessage = `Processing data... ${Math.floor(Math.random() * 60) + 40}% complete.`;
+                }
+                
+                addLogMessage(logMessage);
+                
+                if (logMessages.length < 4) {
+                    stepTimers.push(setTimeout(addLog, logInterval));
+                }
+            }, logInterval);
+            
+            stepTimers.push(logTimer);
+            
+            function addLogMessage(message) {
+                const timestamp = new Date().toLocaleTimeString();
+                logMessages.push(`[${timestamp}] ${message}`);
+                stepLogContent.html(logMessages.join('<br>'));
+                // Scroll to bottom
+                const logElement = stepElement.find('.step-log')[0];
+                if (logElement) {
+                    logElement.scrollTop = logElement.scrollHeight;
+                }
+            }
+            
+            // Randomly decide if this step will fail (except for the first step)
+            const willFail = stepIndex > 0 && Math.random() < failureProbability;
+            
+            // Set timer for step completion
+            const completionTimer = setTimeout(function() {
+                if (isPaused) return;
+                
+                if (willFail) {
+                    // Simulate failure
+                    addLogMessage(`ERROR: Connection timeout occurred during execution!`);
+                    
+                    // Update step to failed
+                    stepBadge.removeClass('bg-running').addClass('bg-failed');
+                    stepBadge.html('<i class="fas fa-times"></i>');
+                    stepStatus.removeClass('bg-primary').addClass('bg-danger');
+                    stepStatus.text('Failed');
+                    
+                    // Update timing
+                    const endTime = new Date();
+                    const durationSec = Math.round((endTime - startTime) / 1000);
+                    stepTiming.text(`Failed after ${durationSec} seconds`);
+                    
+                    // Show error message
+                    stepElement.find('.step-error-container').show();
+                    stepElement.find('.step-error-message').text('Error: Connection timeout when processing data. System could not complete the operation.');
+                    
+                    // Update overall status
+                    updateStatus('failed');
+                } else {
+                    // Simulate success
+                    addLogMessage(`Successfully completed step ${stepIndex + 1} operation.`);
+                    
+                    // Update step to completed
+                    stepBadge.removeClass('bg-running').addClass('bg-completed');
+                    stepBadge.html('<i class="fas fa-check"></i>');
+                    stepStatus.removeClass('bg-primary').addClass('bg-success');
+                    stepStatus.text('Completed');
+                    
+                    // Update timing
+                    const endTime = new Date();
+                    const durationSec = Math.round((endTime - startTime) / 1000);
+                    stepTiming.text(`Completed in ${durationSec} seconds`);
+                    
+                    // Process next step
+                    stepTimers.push(setTimeout(() => processStep(stepIndex + 1), 1000));
+                }
+                
+                updateProgressBar();
+            }, stepDuration);
+            
+            stepTimers.push(completionTimer);
+        }
+        
+        // Toggle log display
+        $(document).on('click', '.toggle-log', function() {
+            const logBody = $(this).closest('.card').find('.step-log');
+            const isExpanded = $(this).data('expanded') === true;
+            
+            if (isExpanded) {
+                logBody.slideUp();
+                $(this).html('<i class="fas fa-chevron-down"></i>');
+                $(this).data('expanded', false);
+            } else {
+                logBody.slideDown();
+                $(this).html('<i class="fas fa-chevron-up"></i>');
+                $(this).data('expanded', true);
+            }
+        });
+        
+        // Start duration timer
+        durationTimer = setInterval(updateDuration, 1000);
+        
+        // Start the simulation after a brief delay
+        setTimeout(() => processStep(0), 1500);
+        
+        // Pause/Resume simulation
+        $('#pause-simulation').click(function() {
+            isPaused = true;
+            $(this).hide();
+            $('#resume-simulation').show();
+            
+            // Pause all animations
+            $('.fa-spin').removeClass('fa-spin');
+            $('#progress-bar').removeClass('progress-bar-animated');
+        });
+        
+        $('#resume-simulation').click(function() {
+            isPaused = false;
+            $(this).hide();
+            $('#pause-simulation').show();
+            
+            // Resume animations
+            $('.fa-cog:not(.fa-spin)').addClass('fa-spin');
+            $('.fa-spinner:not(.fa-spin)').addClass('fa-spin');
+            $('#progress-bar').addClass('progress-bar-animated');
+            
+            // Resume the simulation from where it left off
+            if (simulationStatus === 'running') {
+                // Only clear and restart the timer if the simulation is still running
+                clearInterval(durationTimer);
+                durationTimer = setInterval(updateDuration, 1000);
+                
+                // Continue processing current step
+                if (currentStepIndex >= 0 && currentStepIndex < totalSteps) {
+                    const currentStep = $(`.step-item[data-step-order="${currentStepIndex}"]`);
+                    if (currentStep.find('.step-status').text() === 'Running') {
+                        // Step was in progress, continue
+                        // (The stepTimers will auto-resume on next cycle)
+                    }
+                }
+            }
+        });
+        
+        // Reset simulation
+        $('#reset-simulation').click(function() {
+            // Clear all timers
+            clearInterval(durationTimer);
+            stepTimers.forEach(timer => clearTimeout(timer));
+            stepTimers = [];
+            
+            // Reset all steps
+            $('.step-badge').removeClass('bg-running bg-completed bg-failed').addClass('bg-secondary');
+            $('.step-badge').html('<i class="fas fa-clock"></i>');
+            $('.step-status').removeClass('bg-primary bg-success bg-danger').addClass('bg-secondary').text('Pending');
+            $('.step-timing').text('Waiting to start...');
+            $('.step-log-container').hide();
+            $('.step-error-container').hide();
+            
+            // Reset progress
+            $('#progress-bar').css('width', '0%').attr('aria-valuenow', 0).text('0%');
+            $('#progress-bar').removeClass('bg-success bg-danger').addClass('progress-bar-striped progress-bar-animated');
+            
+            // Reset status
+            $('#status-badge span').removeClass().addClass('badge rounded-pill bg-warning text-dark px-4 py-2 fs-6');
+            $('#status-badge span').html('<i class="fas fa-spinner fa-spin me-2"></i> Pending');
+            $('#current-status').text('Pending');
+            
+            // Reset timestamps
+            simulationStartTime = new Date();
+            simulationCompletedTime = null;
+            $('#started-at').text('Initializing...');
+            $('#completed-at').html('<span class="text-muted">In progress...</span>');
+            $('#duration-counter').text('00:00:00');
+            
+            // Reset state variables
+            currentStepIndex = -1;
+            simulationStatus = 'pending';
+            isPaused = false;
+            $('#pause-simulation').show();
+            $('#resume-simulation').hide();
+            
+            // Restart duration timer
+            durationTimer = setInterval(updateDuration, 1000);
+            
+            // Restart simulation
+            setTimeout(() => processStep(0), 1500);
+        });
+    });
+</script>
+{% endblock %}

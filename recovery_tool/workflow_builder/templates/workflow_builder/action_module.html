@@ -1,0 +1,481 @@
+<!-- recovery_tool/workflow_builder/templates/workflow_builder/action_module.html -->
+{% extends 'workflow_builder/base.html' %}
+
+{% block title %}Action Module{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-bolt me-2"></i>Action Module</h1>
+    <p class="lead">Execute one-time actions between different systems</p>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-play-circle me-2"></i>Create New Action</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'create_action' %}">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="action_type" class="form-label">Action Type</label>
+                        <select class="form-select" id="action_type" name="action_type" required>
+                            <option value="">Select an action type</option>
+                            <optgroup label="Replay Operations">
+                                <option value="kafka_to_kafka">Kafka to Kafka Replay</option>
+                                <option value="mq_to_mq">MQ to MQ Replay</option>
+                            </optgroup>
+                            <optgroup label="Dump Operations">
+                                <option value="kafka_dump">Kafka Dump</option>
+                                <option value="mq_dump">MQ Dump</option>
+                            </optgroup>
+                            <optgroup label="Database Operations">
+                                <option value="db_update">Database Update</option>
+                            </optgroup>
+                            <optgroup label="Script Operations">
+                                <option value="shell_script">Shell Script Execution</option>
+                            </optgroup>
+                        </select>
+                    </div>  
+                    
+                    <div id="action-config-container">
+                        <!-- Source and Target configuration will be added here dynamically -->
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="max_messages" class="form-label">Maximum Messages (optional)</label>
+                        <input type="number" class="form-control" id="max_messages" name="max_messages" min="1" placeholder="Leave blank for unlimited">
+                        <div class="form-text">Maximum number of messages to process. Leave blank for system default.</div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-play me-1"></i> Execute Action
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-history me-2"></i>Recent Actions</h4>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for action in action_logs %}
+                    <a href="{% url 'action_status' action.id %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ action.action_type|title|cut:"_"|capfirst }}</h5>
+                            <small>
+                                {% if action.status == 'completed' %}
+                                <span class="badge bg-success">Completed</span>
+                                {% elif action.status == 'failed' %}
+                                <span class="badge bg-danger">Failed</span>
+                                {% elif action.status == 'running' %}
+                                <span class="badge bg-primary">Running</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Pending</span>
+                                {% endif %}
+                            </small>
+                        </div>
+                        <p class="mb-1">
+                            {% if action.source_type %}From: {{ action.source_type|title }}{% endif %}
+                            {% if action.target_type %}To: {{ action.target_type|title }}{% endif %}
+                        </p>
+                        <small>{{ action.created_at|date:"M d, Y H:i" }}</small>
+                    </a>
+                    {% empty %}
+                    <div class="list-group-item text-center py-4">
+                        <i class="fas fa-info-circle mb-2 text-muted fa-2x"></i>
+                        <p class="mb-0">No recent actions found</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% if action_logs %}
+            <div class="card-footer text-center">
+                <a href="#" class="text-decoration-none">View All Actions</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Template for Kafka configuration -->
+<template id="kafka-config-template">
+    <div class="config-section">
+        <h5 class="mb-3 mt-4">${title}</h5>
+        <div class="mb-3">
+            <label class="form-label">Bootstrap Servers</label>
+            <input type="text" class="form-control" name="${prefix}_bootstrap_servers" placeholder="localhost:9092,broker:9092" required>
+            <div class="form-text">Comma-separated list of Kafka broker addresses</div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Topic</label>
+            <input type="text" class="form-control" name="${prefix}_topic" placeholder="my-topic" required>
+        </div>
+        ${consumer_group}
+    </div>
+</template>
+
+<!-- Template for MQ configuration -->
+<template id="mq-config-template">
+    <div class="config-section">
+        <h5 class="mb-3 mt-4">${title}</h5>
+        <div class="mb-3">
+            <label class="form-label">Queue Manager</label>
+            <input type="text" class="form-control" name="${prefix}_queue_manager" placeholder="QM1" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Channel</label>
+            <input type="text" class="form-control" name="${prefix}_channel" placeholder="DEV.APP.SVRCONN" required>
+        </div>
+        <div class="row">
+            <div class="col-md-8">
+                <div class="mb-3">
+                    <label class="form-label">Host</label>
+                    <input type="text" class="form-control" name="${prefix}_host" placeholder="mq.example.com" required>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="mb-3">
+                    <label class="form-label">Port</label>
+                    <!-- Continuation of the action_module.html template -->
+
+                    <input type="number" class="form-control" name="${prefix}_port" placeholder="1414" required>
+                </div>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Queue Name</label>
+            <input type="text" class="form-control" name="${prefix}_queue_name" placeholder="DEV.QUEUE.1" required>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Username (optional)</label>
+                    <input type="text" class="form-control" name="${prefix}_username" placeholder="">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Password (optional)</label>
+                    <input type="password" class="form-control" name="${prefix}_password" placeholder="">
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<!-- Template for DB configuration -->
+<template id="db-config-template">
+    <div class="config-section">
+        <h5 class="mb-3 mt-4">${title}</h5>
+        <div class="mb-3">
+            <label class="form-label">Database Type</label>
+            <select class="form-select" name="${prefix}_db_type" required>
+                <option value="postgresql">PostgreSQL</option>
+                <option value="mysql">MySQL</option>
+                <option value="oracle">Oracle</option>
+                <option value="sqlserver">SQL Server</option>
+                <option value="mongodb">MongoDB</option>
+            </select>
+        </div>
+        <div class="row">
+            <div class="col-md-8">
+                <div class="mb-3">
+                    <label class="form-label">Host</label>
+                    <input type="text" class="form-control" name="${prefix}_host" placeholder="db.example.com" required>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="mb-3">
+                    <label class="form-label">Port</label>
+                    <input type="number" class="form-control" name="${prefix}_port" placeholder="5432" required>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Username</label>
+                    <input type="text" class="form-control" name="${prefix}_username" placeholder="db_user" required>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-control" name="${prefix}_password" placeholder="" required>
+                </div>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Database Name</label>
+            <input type="text" class="form-control" name="${prefix}_database" placeholder="my_database" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">SQL Query</label>
+            <textarea class="form-control" name="${prefix}_query" rows="4" placeholder="SELECT * FROM table WHERE condition = 'value'" required></textarea>
+        </div>
+    </div>
+</template>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        const configContainer = $('#action-config-container');
+        
+        // Handle action type change
+        $('#action_type').change(function() {
+            configContainer.empty();
+            
+            const actionType = $(this).val();
+            if (!actionType) return;
+            
+            if (actionType === 'kafka_to_kafka') {
+                // Add Kafka source configuration
+                const sourceTemplate = document.getElementById('kafka-config-template').innerHTML
+                    .replace(/\${title}/g, 'Source Kafka Configuration')
+                    .replace(/\${prefix}/g, 'source')
+                    .replace(/\${consumer_group}/g, `
+                        <div class="mb-3">
+                            <label class="form-label">Consumer Group</label>
+                            <input type="text" class="form-control" name="source_group_id" placeholder="my-consumer-group" required>
+                        </div>
+                    `);
+                configContainer.append(sourceTemplate);
+                
+                // Add Kafka target configuration
+                const targetTemplate = document.getElementById('kafka-config-template').innerHTML
+                    .replace(/\${title}/g, 'Target Kafka Configuration')
+                    .replace(/\${prefix}/g, 'target')
+                    .replace(/\${consumer_group}/g, ''); // No consumer group for target
+                configContainer.append(targetTemplate);
+                
+                // Add hidden fields for source and target type
+                configContainer.append(`
+                    <input type="hidden" name="source_type" value="kafka">
+                    <input type="hidden" name="target_type" value="kafka">
+                `);
+                
+            } else if (actionType === 'kafka_dump') {
+                // Add Kafka source configuration for dump
+                const sourceTemplate = document.getElementById('kafka-config-template').innerHTML
+                    .replace(/\${title}/g, 'Kafka Configuration')
+                    .replace(/\${prefix}/g, 'source')
+                    .replace(/\${consumer_group}/g, `
+                        <div class="mb-3">
+                            <label class="form-label">Consumer Group</label>
+                            <input type="text" class="form-control" name="source_group_id" placeholder="my-consumer-group" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Output Format</label>
+                            <select class="form-select" name="output_format">
+                                <option value="json">JSON</option>
+                                <option value="text">Plain Text</option>
+                            </select>
+                            <div class="form-text">Format to display the message content</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Maximum Messages</label>
+                            <input type="number" class="form-control" name="source_max_messages" placeholder="100" value="100">
+                        </div>
+                    `);
+                configContainer.append(sourceTemplate);
+                
+                // Add hidden field for source type
+                configContainer.append(`
+                    <input type="hidden" name="source_type" value="kafka">
+                `);
+                
+            } else if (actionType === 'mq_to_mq') {
+                // Add MQ source configuration
+                const sourceTemplate = document.getElementById('mq-config-template').innerHTML
+                    .replace(/\${title}/g, 'Source MQ Configuration')
+                    .replace(/\${prefix}/g, 'source');
+                configContainer.append(sourceTemplate);
+                
+                // Add MQ target configuration
+                const targetTemplate = document.getElementById('mq-config-template').innerHTML
+                    .replace(/\${title}/g, 'Target MQ Configuration')
+                    .replace(/\${prefix}/g, 'target');
+                configContainer.append(targetTemplate);
+                
+                // Add hidden fields for source and target type
+                configContainer.append(`
+                    <input type="hidden" name="source_type" value="mq">
+                    <input type="hidden" name="target_type" value="mq">
+                `);
+                
+            } else if (actionType === 'mq_dump') {
+                // Add MQ source configuration for dump
+                const sourceTemplate = document.getElementById('mq-config-template').innerHTML
+                    .replace(/\${title}/g, 'MQ Configuration')
+                    .replace(/\${prefix}/g, 'source');
+                configContainer.append(sourceTemplate);
+                
+                // Add MQ dump specific options
+                configContainer.append(`
+                    <div class="mb-3">
+                        <label class="form-label">Browse Mode</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="browse_only" name="browse_only" value="true" checked>
+                            <label class="form-check-label" for="browse_only">
+                                Browse only (messages will remain on the queue)
+                            </label>
+                        </div>
+                        <div class="form-text">If unchecked, messages will be removed from the queue</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Maximum Messages</label>
+                        <input type="number" class="form-control" name="source_max_messages" placeholder="100" value="100">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Output Format</label>
+                        <select class="form-select" name="output_format">
+                            <option value="json">JSON</option>
+                            <option value="text">Plain Text</option>
+                        </select>
+                        <div class="form-text">Format to display the message content</div>
+                    </div>
+                    <input type="hidden" name="source_type" value="mq">
+                `);
+                
+            } else if (actionType === 'db_update') {
+                // For DB update, we only need target configuration
+                const dbTemplate = document.getElementById('db-config-template').innerHTML
+                    .replace(/\${title}/g, 'Database Configuration')
+                    .replace(/\${prefix}/g, 'target');
+                configContainer.append(dbTemplate);
+                
+                // Add hidden field for target type
+                configContainer.append(`
+                    <input type="hidden" name="target_type" value="db">
+                `);
+            } else if (actionType === 'shell_script') {
+                // For shell script, we need a script editor
+                configContainer.append(`
+                    <div class="config-section">
+                        <h5 class="mb-3 mt-4">Shell Script Configuration</h5>
+                        <div class="mb-3">
+                            <label class="form-label">Script Content</label>
+                            <textarea class="form-control" name="source_script_content" rows="10" placeholder="#!/bin/bash&#10;&#10;# Your shell script here&#10;echo 'Hello World!'&#10;&#10;# Exit with success&#10;exit 0" required></textarea>
+                            <div class="form-text">Enter your shell script content. The script will be executed in a controlled environment.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Working Directory</label>
+                            <input type="text" class="form-control" name="source_working_directory" placeholder="/tmp" value="/tmp">
+                            <div class="form-text">Directory where the script will be executed</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Timeout (seconds)</label>
+                            <input type="number" class="form-control" name="source_timeout_seconds" placeholder="60" value="60" min="1" max="3600">
+                            <div class="form-text">Maximum time allowed for script execution in seconds</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Environment Variables (optional)</label>
+                            <textarea class="form-control" name="source_environment_vars" rows="3" placeholder="KEY1=value1&#10;KEY2=value2"></textarea>
+                            <div class="form-text">One environment variable per line in KEY=value format</div>
+                        </div>
+                    </div>
+                    <input type="hidden" name="source_type" value="shell">
+                `);
+            }
+            
+            // Add hidden fields to capture the full configuration as YAML
+            configContainer.append(`
+                <div class="d-none">
+                    <textarea name="source_config" id="source_config"></textarea>
+                    <textarea name="target_config" id="target_config"></textarea>
+                </div>
+            `);
+            
+            // Set up form submission handler
+            $('form').off('submit').on('submit', function(e) {
+                // Prevent the default form submission
+                e.preventDefault();
+                
+                // Gather source configuration
+                const sourceConfig = {};
+                $('[name^="source_"]').each(function() {
+                    if ($(this).attr('name') !== 'source_config' && $(this).attr('name') !== 'source_type') {
+                        const key = $(this).attr('name').replace('source_', '');
+                        let value = $(this).val();
+                        
+                        // Special handling for checkbox (browse_only)
+                        if ($(this).attr('type') === 'checkbox') {
+                            value = $(this).is(':checked');
+                        }
+                        
+                        // Special handling for environment variables
+                        if (key === 'environment_vars' && value) {
+                            try {
+                                // Parse environment variables into an object
+                                const envVars = {};
+                                value.split('\n').forEach(line => {
+                                    if (line.trim()) {
+                                        const [k, v] = line.split('=');
+                                        if (k && v) {
+                                            envVars[k.trim()] = v.trim();
+                                        }
+                                    }
+                                });
+                                value = JSON.stringify(envVars);
+                            } catch (e) {
+                                console.error('Error parsing environment variables:', e);
+                            }
+                        }
+                        
+                        if (value !== '') sourceConfig[key] = value;
+                    }
+                });
+                
+                // Handle specific action types
+                if (actionType === 'mq_dump') {
+                    sourceConfig['browse_only'] = $('#browse_only').is(':checked');
+                    sourceConfig['output_format'] = $('[name="output_format"]').val();
+                } else if (actionType === 'kafka_dump') {
+                    sourceConfig['output_format'] = $('[name="output_format"]').val();
+                }
+                
+                
+                // Gather target configuration
+                const targetConfig = {};
+                $('[name^="target_"]').each(function() {
+                    if ($(this).attr('name') !== 'target_config' && $(this).attr('name') !== 'target_type') {
+                        const key = $(this).attr('name').replace('target_', '');
+                        const value = $(this).val();
+                        if (value) targetConfig[key] = value;
+                    }
+                });
+                
+                // Convert to YAML-like format (simple for this demo)
+                let sourceYaml = '';
+                for (const key in sourceConfig) {
+                    sourceYaml += `${key}: ${sourceConfig[key]}\n`;
+                }
+                
+                let targetYaml = '';
+                for (const key in targetConfig) {
+                    targetYaml += `${key}: ${targetConfig[key]}\n`;
+                }
+                
+                // Set the hidden fields
+                $('#source_config').val(sourceYaml);
+                $('#target_config').val(targetYaml);
+                
+                // Submit the form
+                this.submit();
+            });
+        });
+        
+    });
+
+    
+</script>
+{% endblock %}

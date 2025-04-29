@@ -1,0 +1,9 @@
+workflow:
+  description: ''
+  name: set
+  steps:
+  - event_type: replay
+    from_config: kk
+    from_infra: kafka
+    to_config: ku
+    to_infra: kafka

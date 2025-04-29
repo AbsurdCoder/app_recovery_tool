@@ -45,9 +45,17 @@
                                 <i class="fas fa-cog me-1"></i> Event Type
                             </label>
                             <select class="form-select select2 event-type">
-                                {% for value, label in event_types %}
-                                <option value="{{ value }}" {% if step.event_type == value %}selected{% endif %}>{{ label }}</option>
-                                {% endfor %}
+                                <optgroup label="Standard Operations">
+                                    {% for value, label in event_types %}
+                                        {% if value not in 'kafka_dump,mq_dump' %}
+                                        <option value="{{ value }}" {% if step.event_type == value %}selected{% endif %}>{{ label }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </optgroup>
+                                <optgroup label="Dump Operations">
+                                    <option value="kafka_dump" {% if step.event_type == 'kafka_dump' %}selected{% endif %}>Kafka Dump</option>
+                                    <option value="mq_dump" {% if step.event_type == 'mq_dump' %}selected{% endif %}>MQ Dump</option>
+                                </optgroup>
                             </select>
                         </div>
                     </div>
@@ -306,8 +314,8 @@
             const eventType = selectElement.val();
             
             // Show/hide from/to sections based on event type
-            if (eventType === 'dump' || eventType === 'extract') {
-                // For dump and extract, we only need "from" section
+            if (eventType === 'dump' || eventType === 'extract' || eventType === 'kafka_dump' || eventType === 'mq_dump') {
+                // For dump, extract, and special dump operations, we only need "from" section
                 step.find('.to-section').parent().hide();
                 step.find('.from-section').parent().removeClass('col-md-6').addClass('col-md-12');
             } else if (eventType === 'load') {
@@ -323,6 +331,15 @@
             // Update configuration field labels based on event type
             updateConfigLabels(step, eventType);
             
+            // Special handling for kafka_dump and mq_dump
+            if (eventType === 'kafka_dump') {
+                // Pre-select Kafka as from_infra
+                step.find('.from-infra').val('kafka').trigger('change');
+            } else if (eventType === 'mq_dump') {
+                // Pre-select MQ as from_infra
+                step.find('.from-infra').val('mq').trigger('change');
+            }
+            
             // Trigger infra type change to update config fields
             handleInfraTypeChange(step.find('.from-infra'), 'from');
             handleInfraTypeChange(step.find('.to-infra'), 'to');
@@ -334,32 +351,42 @@
             const infraType = selectElement.val();
             const configField = step.find(`.${direction}-config`);
             const infraIcon = step.find(`.${direction}-section h5 i`);
+            const eventType = step.find('.event-type').val();
             
             // Update icon based on infra type
             infraIcon.removeClass('fas fa-database fas fa-server fas fa-exchange-alt fas fa-hdd fas fa-file-alt');
             
-            // Update placeholder and help text based on infra type
-            switch(infraType) {
-                case 'kafka':
-                    configField.attr('placeholder', 'Enter Kafka configuration:\n\nbootstrap_servers: localhost:9092\ntopic: example-topic\ngroup_id: recovery-group\n...');
-                    infraIcon.addClass('fas fa-exchange-alt');
-                    break;
-                case 'mq':
-                    configField.attr('placeholder', 'Enter MQ configuration:\n\nqueue_manager: QM1\nchannel: DEV.APP.SVRCONN\nhost: localhost\nport: 1414\nqueue_name: DEV.QUEUE.1\n...');
-                    infraIcon.addClass('fas fa-server');
-                    break;
-                case 'db':
-                    configField.attr('placeholder', 'Enter database configuration:\n\ndb_type: postgresql\nhost: localhost\nport: 5432\nusername: user\npassword: password\ndatabase: db_name\nquery: SELECT * FROM table\n...');
-                    infraIcon.addClass('fas fa-database');
-                    break;
-                case 'servicebus':
-                    configField.attr('placeholder', 'Enter Service Bus configuration:\n\nconnection_string: Endpoint=sb://...\nqueue_name: example-queue\n...');
-                    infraIcon.addClass('fas fa-hdd');
-                    break;
-                case 'file':
-                    configField.attr('placeholder', 'Enter file system configuration:\n\npath: /path/to/file\nformat: csv\ndelimiter: ,\nencoding: utf-8\n...');
-                    infraIcon.addClass('fas fa-file-alt');
-                    break;
+            // Update placeholder and help text based on infra type and event type
+            if (eventType === 'kafka_dump' && direction === 'from') {
+                configField.attr('placeholder', 'Enter Kafka configuration for dump:\n\nbootstrap_servers: localhost:9092\ntopic: example-topic\ngroup_id: dump-group\nauto_offset_reset: earliest\nmax_messages: 100\noutput_format: json');
+                infraIcon.addClass('fas fa-exchange-alt');
+            } else if (eventType === 'mq_dump' && direction === 'from') {
+                configField.attr('placeholder', 'Enter MQ configuration for dump:\n\nqueue_manager: QM1\nchannel: DEV.APP.SVRCONN\nhost: localhost\nport: 1414\nqueue_name: DEV.QUEUE.1\nbrowse_only: true\nmax_messages: 100\noutput_format: json');
+                infraIcon.addClass('fas fa-server');
+            } else {
+                // Original infra type handling
+                switch(infraType) {
+                    case 'kafka':
+                        configField.attr('placeholder', 'Enter Kafka configuration:\n\nbootstrap_servers: localhost:9092\ntopic: example-topic\ngroup_id: recovery-group\n...');
+                        infraIcon.addClass('fas fa-exchange-alt');
+                        break;
+                    case 'mq':
+                        configField.attr('placeholder', 'Enter MQ configuration:\n\nqueue_manager: QM1\nchannel: DEV.APP.SVRCONN\nhost: localhost\nport: 1414\nqueue_name: DEV.QUEUE.1\n...');
+                        infraIcon.addClass('fas fa-server');
+                        break;
+                    case 'db':
+                        configField.attr('placeholder', 'Enter database configuration:\n\ndb_type: postgresql\nhost: localhost\nport: 5432\nusername: user\npassword: password\ndatabase: db_name\nquery: SELECT * FROM table\n...');
+                        infraIcon.addClass('fas fa-database');
+                        break;
+                    case 'servicebus':
+                        configField.attr('placeholder', 'Enter Service Bus configuration:\n\nconnection_string: Endpoint=sb://...\nqueue_name: example-queue\n...');
+                        infraIcon.addClass('fas fa-hdd');
+                        break;
+                    case 'file':
+                        configField.attr('placeholder', 'Enter file system configuration:\n\npath: /path/to/file\nformat: csv\ndelimiter: ,\nencoding: utf-8\n...');
+                        infraIcon.addClass('fas fa-file-alt');
+                        break;
+                }
             }
         }
         
@@ -383,8 +410,15 @@
                 case 'load':
                     step.find('.to-section h5').html('<i class="fas fa-server"></i> Load To');
                     break;
+                case 'kafka_dump':
+                    step.find('.from-section h5').html('<i class="fas fa-exchange-alt"></i> Kafka Source');
+                    break;
+                case 'mq_dump':
+                    step.find('.from-section h5').html('<i class="fas fa-server"></i> MQ Source');
+                    break;
             }
         }
+
         
         // Function to show notification
         function showNotification(title, message, type) {

@@ -1,0 +1,277 @@
+<!-- recovery_tool/workflow_builder/templates/workflow_builder/action_status.html -->
+{% extends 'workflow_builder/base.html' %}
+
+{% block title %}Action Status{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-with-button">
+        <h1><i class="fas fa-bolt me-2"></i>Action Status</h1>
+        <div>
+            <a href="{% url 'action_module' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Back to Actions
+            </a>
+        </div>
+    </div>
+    <h4 class="mb-0">{{ action_log.action_type|title|replace:"_":" " }}</h4>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+            <i class="fas fa-info-circle me-2"></i> Action Status
+        </div>
+        <div id="status-refresh" class="text-muted">
+            <small>Auto-refreshing...</small>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Status</h5>
+                        <div id="status-badge" class="mt-3 mb-3">
+                            <span class="badge rounded-pill bg-warning text-dark px-4 py-2 fs-6">
+                                <i class="fas fa-spinner fa-spin me-2"></i> 
+                                <span id="current-status">{{ action_log.get_status_display }}</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Started</h5>
+                        <p class="card-text mt-3 fs-6" id="started-at">
+                            {% if action_log.started_at %}
+                                {{ action_log.started_at|date:"M d, Y H:i:s" }}
+                            {% else %}
+                                <span class="text-muted">Pending...</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Completed</h5>
+                        <p class="card-text mt-3 fs-6" id="completed-at">
+                            {% if action_log.completed_at %}
+                                {{ action_log.completed_at|date:"M d, Y H:i:s" }}
+                            {% else %}
+                                <span class="text-muted">In progress...</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Duration</h5>
+                        <p class="card-text mt-3 fs-6" id="duration">
+                            <span id="duration-counter">Calculating...</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <h5 class="mb-3"><i class="fas fa-clipboard-list me-2"></i>Configuration</h5>
+        
+        <div class="row mb-4">
+            {% if action_log.source_config %}
+            <div class="col-md-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-database me-2"></i>Source: {{ action_log.source_type|title }}</h5>
+                    </div>
+                    <div class="card-body">
+                        <pre class="mb-0">{{ action_log.source_config }}</pre>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if action_log.target_config %}
+            <div class="col-md-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-server me-2"></i>Target: {{ action_log.target_type|title }}</h5>
+                    </div>
+                    <div class="card-body">
+                        <pre class="mb-0">{{ action_log.target_config }}</pre>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <h5 class="mb-3"><i class="fas fa-terminal me-2"></i>Execution Log</h5>
+        
+        <div class="card">
+            <div class="card-body p-0">
+                <div id="log-container" class="bg-dark text-light p-3" style="max-height: 400px; overflow-y: auto; font-family: monospace; font-size: 14px;">
+                    {% if action_log.log_output %}
+                        <div id="log-content">{{ action_log.log_output|linebreaksbr }}</div>
+                    {% else %}
+                        <div id="log-content" class="text-muted">Waiting for logs...</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Error message section (hidden by default) -->
+        <div id="error-container" class="mt-4" style="{% if not action_log.error_message %}display: none;{% endif %}">
+            <h5 class="text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Error</h5>
+            <div class="alert alert-danger">
+                <div id="error-message">{{ action_log.error_message }}</div>
+            </div>
+        </div>
+        
+        <!-- Result summary section (hidden by default) -->
+        <div id="result-container" class="mt-4" style="{% if not action_log.result_summary %}display: none;{% endif %}">
+            <h5 class="text-success"><i class="fas fa-check-circle me-2"></i>Result</h5>
+            <div class="alert alert-success">
+                <div id="result-summary">{{ action_log.result_summary }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        const actionId = '{{ action_log.id }}';
+        let refreshInterval;
+   
+        // Fix the date formatting syntax
+        let startTime = {% if action_log.started_at %} new Date("{{ action_log.started_at|date:'c' }}") {% else %} null {% endif %};
+        let completedTime = {% if action_log.completed_at %} new Date("{{ action_log.completed_at|date:'c' }}") {% else %} null {% endif %};
+        let durationTimer;
+        
+        
+        // Function to update duration display
+        function updateDuration() {
+            if (!startTime) return;
+            
+            const now = completedTime || new Date();
+            const durationMs = now - startTime;
+            
+            // Format duration
+            const seconds = Math.floor((durationMs / 1000) % 60);
+            const minutes = Math.floor((durationMs / (1000 * 60)) % 60);
+            const hours = Math.floor(durationMs / (1000 * 60 * 60));
+            
+            let durationText = '';
+            if (hours > 0) {
+                durationText += hours + 'h ';
+            }
+            if (minutes > 0 || hours > 0) {
+                durationText += minutes + 'm ';
+            }
+            durationText += seconds + 's';
+            
+            $('#duration-counter').text(durationText);
+        }
+        
+        // Start duration timer if we have a start time
+        if (startTime) {
+            durationTimer = setInterval(updateDuration, 1000);
+            updateDuration();
+        }
+        
+        // Function to fetch action status
+        function fetchActionStatus() {
+            $.ajax({
+                url: '{% url "action_status_api" action_log.id %}',
+                method: 'GET',
+                success: function(data) {
+                    updateActionUI(data);
+                    
+                    // If action is completed or failed, stop polling
+                    if (data.status === 'completed' || data.status === 'failed') {
+                        clearInterval(refreshInterval);
+                        $('#status-refresh').html('<small>Action finished</small>');
+                        
+                        if (data.completed_at) {
+                            completedTime = new Date(data.completed_at);
+                            updateDuration();
+                            clearInterval(durationTimer);
+                        }
+                    }
+                },
+                error: function() {
+                    console.error('Failed to fetch action status');
+                }
+            });
+        }
+        
+        // Function to update the UI with action data
+        function updateActionUI(data) {
+            // Update action status
+            let statusClass = 'bg-warning text-dark';
+            let statusIcon = '<i class="fas fa-spinner fa-spin me-2"></i>';
+            
+            if (data.status === 'completed') {
+                statusClass = 'bg-success';
+                statusIcon = '<i class="fas fa-check-circle me-2"></i>';
+            } else if (data.status === 'failed') {
+                statusClass = 'bg-danger';
+                statusIcon = '<i class="fas fa-times-circle me-2"></i>';
+            } else if (data.status === 'running') {
+                statusClass = 'bg-primary';
+                statusIcon = '<i class="fas fa-cog fa-spin me-2"></i>';
+            }
+            
+            $('#status-badge span').removeClass().addClass(`badge rounded-pill ${statusClass} px-4 py-2 fs-6`);
+            $('#status-badge span').html(`${statusIcon} ${data.status.charAt(0).toUpperCase() + data.status.slice(1)}`);
+            
+            // Update timestamps
+            if (data.started_at && (!startTime || startTime === null)) {
+                startTime = new Date(data.started_at);
+                durationTimer = setInterval(updateDuration, 1000);
+                $('#started-at').text(new Date(data.started_at).toLocaleString());
+            }
+            
+            if (data.completed_at) {
+                $('#completed-at').text(new Date(data.completed_at).toLocaleString());
+            }
+            
+            // Update log output
+            if (data.log_output) {
+                $('#log-content').html(data.log_output.replace(/\n/g, '<br>'));
+                // Scroll log to bottom
+                const logContainer = document.getElementById('log-container');
+                logContainer.scrollTop = logContainer.scrollHeight;
+            }
+            
+            // Update error message if any
+            if (data.error_message) {
+                $('#error-container').show();
+                $('#error-message').text(data.error_message);
+            }
+            
+            // Update result summary if any
+            if (data.result_summary) {
+                $('#result-container').show();
+                $('#result-summary').text(data.result_summary);
+            }
+        }
+        
+        // Fetch status initially
+        fetchActionStatus();
+        
+        // Set up polling if action is not completed
+        if ('{{ action_log.status }}' !== 'completed' && '{{ action_log.status }}' !== 'failed') {
+            refreshInterval = setInterval(fetchActionStatus, 1000);
+        } else {
+            $('#status-refresh').html('<small>Action finished</small>');
+        }
+    });
+</script>
+{% endblock %}
