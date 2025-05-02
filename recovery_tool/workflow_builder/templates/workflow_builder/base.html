@@ -360,6 +360,12 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" href="{% url 'approval_list' %}">
+                                <i class="fas fa-check-double me-1"></i> Approvals
+                                <span class="badge bg-danger rounded-pill approval-count"></span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="{% url 'documentation' %}">
                                 <i class="fas fa-book me-1"></i> Documentation
                             </a>
@@ -383,5 +389,28 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     {% block extra_js %}{% endblock %}
+    <script>
+        // Function to update the approval count badge
+        function updateApprovalCount() {
+            $.getJSON('{% url "approval_list" %}?count_only=true', function(data) {
+                const count = data.pending_count || 0;
+                const badge = $('.approval-count');
+                
+                if (count > 0) {
+                    badge.text(count).show();
+                } else {
+                    badge.hide();
+                }
+            });
+        }
+        
+        // Update count when page loads
+        $(document).ready(function() {
+            updateApprovalCount();
+            
+            // Update count every 30 seconds
+            setInterval(updateApprovalCount, 30000);
+        });
+    </script>
 </body>
 </html>

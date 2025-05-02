@@ -293,21 +293,56 @@
                 success: function(response) {
                     if (response.status === 'success') {
                         $('#yaml-preview').text(response.yaml);
-                        
-                        // Show success notification
                         showNotification('Success', 'Workflow saved successfully!', 'success');
+                    } else if (response.status === 'pending_approval') {
+                        // Show pending approval dialog
+                        const approvalId = response.approval_id;
+                        
+                        // Create modal HTML with proper approval ID
+                        let modalHtml = `
+                            <div class="modal fade" id="approvalPendingModal" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Workflow Pending Approval</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="alert alert-info">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                <strong>Your workflow changes have been submitted for approval.</strong>
+                                            </div>
+                                            <p>The workflow requires two-person approval before changes can be applied.</p>
+                                            <p>Current status: <span class="badge bg-warning">Pending Approval</span></p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <a href="{% url 'workflow_list' %}" class="btn btn-secondary">Back to Workflows</a>
+                                            <a href="/workflows/approvals/${approvalId}/" class="btn btn-primary">View Approval</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Add the modal to the page
+                        $('body').append(modalHtml);
+                        
+                        // Show the modal
+                        var approvalModal = new bootstrap.Modal(document.getElementById('approvalPendingModal'));
+                        approvalModal.show();
+                        
                     } else {
                         showNotification('Error', 'Error saving workflow: ' + response.message, 'danger');
                     }
                     saveBtn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> Save Workflow');
                 },
                 error: function() {
-                    showNotification('Error', 'Error saving workflow. Please try again.', 'danger');
+                    showNotification('Error', 'Error saving workflow.', 'danger');
                     saveBtn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> Save Workflow');
                 }
             });
         });
-        
+
         // Event type change handler
         function handleEventTypeChange(selectElement) {
             const step = selectElement.closest('.workflow-step');

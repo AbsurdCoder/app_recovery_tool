@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
-from .models import Workflow, WorkflowStep, ActionLog
+from .models import Workflow, WorkflowStep, ActionLog, ApprovalRequest
 from .forms import WorkflowForm, WorkflowStepForm
 import yaml
 import json
@@ -12,8 +12,29 @@ from django.utils import timezone
 import uuid
 
 def workflow_list(request):
-    workflows = Workflow.objects.all().order_by('-created_at')
-    return render(request, 'workflow_builder/workflow_list.html', {'workflows': workflows})
+    """
+    List all workflows that are fully approved (have no pending approval requests).
+    """
+    # Get all workflows
+    all_workflows = Workflow.objects.all().order_by('-created_at')
+    
+    # Filter out workflows with pending approval requests
+    # (This is a simple implementation - a more efficient one would use a subquery)
+    approved_workflows = []
+    for workflow in all_workflows:
+        # Check if the workflow has any pending approval requests
+        pending_requests = ApprovalRequest.objects.filter(
+            workflow=workflow,
+            status='pending'
+        ).exists()
+        
+        # Only include workflows without pending requests
+        if not pending_requests:
+            approved_workflows.append(workflow)
+    
+    return render(request, 'workflow_builder/workflow_list.html', {
+        'workflows': approved_workflows
+    })
 
 def create_workflow(request):
     if request.method == 'POST':
@@ -74,10 +95,18 @@ def save_workflow(request, workflow_id):
         workflow.yaml_content = yaml_content
         workflow.save()
         
-        # Save YAML to file
-        file_path = os.path.join(settings.WORKFLOW_YAML_DIR, f"{workflow.id}.yaml")
-        with open(file_path, 'w') as f:
-            f.write(yaml_content)
+        approval = ApprovalRequest.objects.create(
+            request_type='workflow_save',
+            workflow=workflow,
+            workflow_data=data,
+            status='pending'
+        )
+        
+        return JsonResponse({
+            'status': 'pending_approval',
+            'message': 'Workflow save requires approval',
+            'approval_id': str(approval.id)
+        })
         
         return JsonResponse({'status': 'success', 'yaml': yaml_content})
     
@@ -124,7 +153,19 @@ def execute_workflow(request, workflow_id):
     
     workflow = get_object_or_404(Workflow, id=workflow_id)
     steps = workflow.steps.all().order_by('order')
+    approval = ApprovalRequest.objects.create(
+        request_type='workflow_execute',
+        workflow=workflow,
+        status='pending'
+    )
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'status': 'pending_approval',
+            'message': 'Workflow execution requires approval',
+            'approval_id': str(approval.id)
+        })
     
+
     # Create a new execution record
     execution = WorkflowExecution.objects.create(
         workflow=workflow,
@@ -196,8 +237,8 @@ def execute_workflow(request, workflow_id):
     thread = threading.Thread(target=run_execution)
     thread.daemon = True
     thread.start()
-    
-    return redirect('execution_status', execution_id=execution.id)
+    return redirect('approval_detail', approval_id=approval.id)
+    # return redirect('execution_status', execution_id=execution.id)
 
 # recovery_tool/workflow_builder/views.py
 
@@ -317,4 +358,134 @@ def simulate_workflow(request, workflow_id):
         'workflow': workflow,
         'steps': simulated_steps,
         'start_time': timezone.now().isoformat()
+    })
+
+
+def approval_list(request):
+    """View to list all pending approval requests"""
+    # Get pending approval requests
+    pending_requests = ApprovalRequest.objects.filter(status='pending')
+    
+    return render(request, 'workflow_builder/approval_list.html', {
+        'pending_requests': pending_requests
+    })
+
+def approval_detail(request, approval_id):
+    """View to show details of an approval request"""
+    approval = get_object_or_404(ApprovalRequest, id=approval_id)
+    
+    # If this is a workflow save approval, we need to show the workflow data
+    workflow_preview = None
+    if approval.request_type == 'workflow_save' and approval.workflow_data:
+        # Create a preview of what the workflow will look like
+        steps_data = approval.workflow_data.get('steps', [])
+        workflow_preview = {
+            'name': approval.workflow.name,
+            'description': approval.workflow.description,
+            'steps': steps_data
+        }
+    
+    return render(request, 'workflow_builder/approval_detail.html', {
+        'approval': approval,
+        'workflow': approval.workflow,
+        'workflow_preview': workflow_preview
+    })
+
+@csrf_exempt
+def approve_request(request, approval_id):
+    """Handle approval action"""
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Method not allowed'})
+    
+    approval = get_object_or_404(ApprovalRequest, id=approval_id)
+    
+    # Check if already fully approved
+    if approval.is_fully_approved:
+        return JsonResponse({'status': 'error', 'message': 'Already fully approved'})
+    
+    # Get approver information (in a real system, this would come from authentication)
+    approver_name = request.POST.get('approver_name', f"Approver{approval.approval_count + 1}")
+    
+    # Record the approval
+    now = timezone.now()
+    if not approval.approver1:
+        approval.approver1 = approver_name
+        approval.approver1_time = now
+    elif not approval.approver2 and approval.approver1 != approver_name:
+        approval.approver2 = approver_name
+        approval.approver2_time = now
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid approval sequence or same person approving twice'})
+    
+    # Check if fully approved
+    if approval.is_fully_approved:
+        approval.status = 'approved'
+        
+        # Execute the approved action
+        if approval.request_type == 'workflow_save':
+            # Save the workflow with the approved data
+            _process_workflow_save(approval)
+        elif approval.request_type == 'workflow_execute':
+            # Execute the workflow
+            _process_workflow_execute(approval)
+    
+    approval.save()
+    
+    return JsonResponse({
+        'status': 'success', 
+        'message': 'Approval recorded',
+        'approval_count': approval.approval_count,
+        'is_fully_approved': approval.is_fully_approved
+    })
+
+# Helper functions for processing approved requests
+def _process_workflow_save(approval):
+    """Process an approved workflow save request"""
+    workflow = approval.workflow
+    steps_data = approval.workflow_data.get('steps', [])
+    
+    # Delete existing steps
+    workflow.steps.all().delete()
+    
+    # Add new steps from the approved data
+    for i, step_data in enumerate(steps_data):
+        WorkflowStep.objects.create(
+            workflow=workflow,
+            event_type=step_data.get('event_type'),
+            from_infra=step_data.get('from_infra'),
+            to_infra=step_data.get('to_infra'),
+            from_config=step_data.get('from_config', ''),
+            to_config=step_data.get('to_config', ''),
+            order=i
+        )
+    
+    # Generate YAML
+    yaml_content = generate_yaml(workflow)
+    workflow.yaml_content = yaml_content
+    workflow.save()
+    
+    # Save YAML to file
+    file_path = os.path.join(settings.WORKFLOW_YAML_DIR, f"{workflow.id}.yaml")
+    with open(file_path, 'w') as f:
+        f.write(yaml_content)
+
+def _process_workflow_execute(approval):
+    """Process an approved workflow execution request"""
+    workflow = approval.workflow
+    # Execute the workflow
+    execute_workflow(None, workflow.id)
+
+def approval_list(request):
+    """View to list all pending approval requests"""
+    # Get pending approval requests
+    pending_requests = ApprovalRequest.objects.filter(status='pending')
+    
+    # If count_only parameter is present, return only the count as JSON
+    if request.GET.get('count_only') == 'true':
+        return JsonResponse({
+            'pending_count': pending_requests.count()
+        })
+    
+    return render(request, 'workflow_builder/approval_list.html', {
+        'pending_requests': pending_requests
     })

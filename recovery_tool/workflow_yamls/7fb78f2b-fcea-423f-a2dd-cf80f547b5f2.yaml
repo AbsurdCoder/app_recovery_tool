@@ -1,0 +1,9 @@
+workflow:
+  description: ''
+  name: testestestest
+  steps:
+  - event_type: replay
+    from_config: ew
+    from_infra: kafka
+    to_config: ewers
+    to_infra: kafka

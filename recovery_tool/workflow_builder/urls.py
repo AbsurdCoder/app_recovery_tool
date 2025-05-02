@@ -18,4 +18,7 @@ urlpatterns = [
     path('execute/<uuid:workflow_id>/', views.execute_workflow, name='execute_workflow'),
     path('execution/<uuid:execution_id>/', views.execution_status, name='execution_status'),
     path('simulate/<uuid:workflow_id>/', views.simulate_workflow, name='simulate_workflow'),
+    path('approvals/', views.approval_list, name='approval_list'),
+    path('approvals/<uuid:approval_id>/', views.approval_detail, name='approval_detail'),
+    path('approvals/<uuid:approval_id>/approve/', views.approve_request, name='approve_request'),
 ]

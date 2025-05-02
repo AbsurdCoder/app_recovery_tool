@@ -11,7 +11,7 @@
             <a href="{% url 'edit_workflow' workflow.id %}" class="btn btn-warning">
                 <i class="fas fa-edit me-1"></i> Edit
             </a>
-            <a href="{% url 'execute_workflow' workflow.id %}" class="btn btn-success">
+            <a href="{% url 'execute_workflow' workflow.id %}" class="btn btn-success execute-workflow-btn">
                 <i class="fas fa-play me-1"></i> Execute
             </a>
             <a href="{% url 'simulate_workflow' workflow.id %}" class="btn btn-warning me-2">
@@ -149,5 +149,78 @@
             }
         });
     });
+    
+    $(document).ready(function() {
+        // Add a click handler to the execute button
+        $('.execute-workflow-btn').click(function(e) {
+            e.preventDefault();
+            
+            const executeUrl = $(this).attr('href');
+            
+            // Show loading state
+            $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Processing...');
+            
+            // Make AJAX request
+            $.ajax({
+                url: executeUrl,
+                type: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                success: function(response) {
+                    if (response.status === 'pending_approval') {
+                        // Show pending approval dialog
+                        const approvalId = response.approval_id;
+                        
+                        // Create and show a modal for pending approval
+                        const modalHtml = `
+                            <div class="modal fade" id="executeApprovalModal" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Execution Pending Approval</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="alert alert-info">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                <strong>Your workflow execution request has been submitted for approval.</strong>
+                                            </div>
+                                            <p>This workflow requires two-person approval before it can be executed.</p>
+                                            <p>Current status: <span class="badge bg-warning">Pending Approval</span></p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            <a href="/workflows/approvals/${approvalId}/" class="btn btn-primary">View Approval</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Add the modal to the page
+                        $('body').append(modalHtml);
+                        
+                        // Show the modal
+                        var approvalModal = new bootstrap.Modal(document.getElementById('executeApprovalModal'));
+                        approvalModal.show();
+                    } else {
+                        // Redirect to the result page
+                        window.location.href = response.redirect_url || executeUrl;
+                    }
+                },
+                error: function() {
+                    alert('Error submitting execution request.');
+                    // Reset button
+                    $('.execute-workflow-btn').prop('disabled', false).html('<i class="fas fa-play me-1"></i> Execute');
+                },
+                complete: function() {
+                    // Reset button
+                    $('.execute-workflow-btn').prop('disabled', false).html('<i class="fas fa-play me-1"></i> Execute');
+                }
+            });
+        });
+    });
+
 </script>
 {% endblock %}

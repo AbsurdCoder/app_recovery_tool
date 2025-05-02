@@ -1,0 +1,9 @@
+workflow:
+  description: ''
+  name: test
+  steps:
+  - event_type: kafka_dump
+    from_config: yababab
+    from_infra: kafka
+    to_config: ''
+    to_infra: kafka

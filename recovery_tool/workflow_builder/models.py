@@ -144,3 +144,45 @@ class ActionLog(models.Model):
         elif self.started_at:
             return timezone.now() - self.started_at
         return None
+    
+class ApprovalRequest(models.Model):
+    REQUEST_TYPES = [
+        ('workflow_save', 'Workflow Save'),
+        ('workflow_execute', 'Workflow Execute'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    request_type = models.CharField(max_length=50, choices=REQUEST_TYPES)
+    workflow = models.ForeignKey(Workflow, related_name='approval_requests', on_delete=models.CASCADE)
+    workflow_data = models.JSONField(null=True, blank=True)  # For storing workflow data before save
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    # Approval tracking
+    approver1 = models.CharField(max_length=100, null=True, blank=True)
+    approver1_time = models.DateTimeField(null=True, blank=True)
+    approver2 = models.CharField(max_length=100, null=True, blank=True)
+    approver2_time = models.DateTimeField(null=True, blank=True)
+    
+    def __str__(self):
+        return f"{self.get_request_type_display()} for {self.workflow.name}"
+    
+    @property
+    def is_fully_approved(self):
+        return self.approver1 is not None and self.approver2 is not None
+    
+    @property
+    def approval_count(self):
+        count = 0
+        if self.approver1:
+            count += 1
+        if self.approver2:
+            count += 1
+        return count

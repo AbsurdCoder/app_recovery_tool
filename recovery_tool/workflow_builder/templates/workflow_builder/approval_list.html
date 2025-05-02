@@ -1,0 +1,123 @@
+<!-- recovery_tool/workflow_builder/templates/workflow_builder/approval_list.html -->
+{% extends 'workflow_builder/base.html' %}
+{% load custom_filters %}
+{% block title %}Pending Approvals{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-check-double me-2"></i>Pending Approvals</h1>
+    <p class="lead">Review and approve workflow operations</p>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h4 class="mb-0"><i class="fas fa-list me-2"></i>Approval Requests</h4>
+    </div>
+    <div class="card-body">
+        {% if pending_requests %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Request Type</th>
+                            <th>Workflow</th>
+                            <th>Created</th>
+                            <th>Current Approvals</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for request in pending_requests %}
+                            <tr>
+                                <td>
+                                    {% if request.request_type == 'workflow_save' %}
+                                        <span class="badge bg-primary">Save</span>
+                                    {% elif request.request_type == 'workflow_execute' %}
+                                        <span class="badge bg-success">Execute</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ request.workflow.name }}</td>
+                                <td>{{ request.created_at|date:"M d, Y H:i" }}</td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar {% if request.approval_count == 0 %}bg-danger{% elif request.approval_count == 1 %}bg-warning{% else %}bg-success{% endif %}" 
+                                             role="progressbar" 
+                                             style="width: {{ request.approval_count|multiply:50 }}%;" 
+                                             aria-valuenow="{{ request.approval_count }}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="2">
+                                            {{ request.approval_count }}/2
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a href="{% url 'approval_detail' request.id %}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-eye me-1"></i> Review
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <!-- recovery_tool/workflow_builder/templates/workflow_builder/approval_list.html -->
+<!-- Add this section after the main approval list table -->
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h4 class="mb-0"><i class="fas fa-clock me-2"></i>Pending Workflows</h4>
+    </div>
+    <div class="card-body">
+        {% if pending_requests %}
+            <p class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                These workflows have pending changes that need approval before they appear in the main workflow list.
+            </p>
+            
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Workflow</th>
+                            <th>Request Type</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for request in pending_requests %}
+                            <tr>
+                                <td>{{ request.workflow.name }}</td>
+                                <td>
+                                    {% if request.request_type == 'workflow_save' %}
+                                        <span class="badge bg-primary">Pending Save</span>
+                                    {% elif request.request_type == 'workflow_execute' %}
+                                        <span class="badge bg-success">Pending Execution</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ request.created_at|date:"M d, Y H:i" }}</td>
+                                <td>
+                                    <a href="{% url 'approval_detail' request.id %}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-eye me-1"></i> Review
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-success mb-0">
+                <i class="fas fa-check-circle me-2"></i> No pending workflow changes.
+            </div>
+        {% endif %}
+    </div>
+</div>
+        {% else %}
+            <div class="alert alert-info mb-0">
+                <i class="fas fa-info-circle me-2"></i> No pending approval requests found.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
